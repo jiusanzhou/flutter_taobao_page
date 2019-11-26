@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:taobao_page/taobao_page.dart';
+import 'package:flutter_taobao_page/taobao_page.dart';
 
 void main() => runApp(MyApp());
 
@@ -48,7 +48,6 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-
   bool _loading = true;
   bool _canFetch = false;
   int _page = 0;
@@ -62,12 +61,12 @@ class _MyHomePageState extends State<MyHomePage> {
   void _fetchOrder() {
     if (_busy) return;
     _busy = true;
-    _controller.getOrder(_page+1, count: 5).then((data) {
+    _controller.getOrder(_page + 1, count: 5).then((data) {
       _orders.addAll(data["mainOrders"]);
       setState(() {
         _page += 1;
       });
-    }).catchError((_){
+    }).catchError((_) {
       print("抓取第 $_page 页订单失败: $_");
     });
     _busy = false;
@@ -85,7 +84,8 @@ class _MyHomePageState extends State<MyHomePage> {
       appBar: AppBar(
         // Here we take the value from the MyHomePage object that was created by
         // the App.build method, and use it to set our appbar title.
-        title: _canFetch?Text("${widget.title} - $_page 页"):Text(widget.title),
+        title:
+            _canFetch ? Text("${widget.title} - $_page 页") : Text(widget.title),
         actions: <Widget>[
           IconButton(
             onPressed: () {
@@ -106,12 +106,14 @@ class _MyHomePageState extends State<MyHomePage> {
         onCreated: (TaobaoPageController controller) {
           _controller = controller;
         },
+
         /// 可以进行登录
         onInit: () {
           setState(() {
             _loading = false;
           });
         },
+
         /// 可以进行订单抓取
         onReady: () {
           setState(() {
@@ -122,51 +124,54 @@ class _MyHomePageState extends State<MyHomePage> {
           onNotification: (ScrollNotification note) {
             return true;
           },
-          child: _loading?Center(child: CircularProgressIndicator()):
-              CustomScrollView(
-                slivers: <Widget>[
-                  SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (BuildContext context, int index) {
-                        if ( index == _orders.length ) {
-                          return _buildMoreWidget();
-                        }
-                        Map<String, dynamic> order = _orders[index];
-                        return Container(
-                          alignment: Alignment.center,
-                          padding: EdgeInsets.all(20),
-                          margin: EdgeInsets.symmetric(vertical: 10),
-                          color: Colors.lightBlue[100],
-                          child: Row(
-                            children: <Widget>[
-                              Flexible(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: <Widget>[
-                                    Text(order["id"]),
-                                    Text(order["seller"]["shopName"]??'未知'),
-                                  ],
+          child: _loading
+              ? Center(child: CircularProgressIndicator())
+              : CustomScrollView(
+                  slivers: <Widget>[
+                    SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (BuildContext context, int index) {
+                          if (index == _orders.length) {
+                            return _buildMoreWidget();
+                          }
+                          Map<String, dynamic> order = _orders[index];
+                          return Container(
+                            alignment: Alignment.center,
+                            padding: EdgeInsets.all(20),
+                            margin: EdgeInsets.symmetric(vertical: 10),
+                            color: Colors.lightBlue[100],
+                            child: Row(
+                              children: <Widget>[
+                                Flexible(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: <Widget>[
+                                      Text(order["id"]),
+                                      Text(order["seller"]["shopName"] ?? '未知'),
+                                    ],
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                      childCount: _orders.length + 1,
+                              ],
+                            ),
+                          );
+                        },
+                        childCount: _orders.length + 1,
+                      ),
                     ),
-                  ),
-            ],
-          ),
+                  ],
+                ),
         ),
       ),
-      floatingActionButton: _canFetch?FloatingActionButton(
-        onPressed: _fetchOrder,
-        tooltip: 'Increment',
-        child: Icon(Icons.add),
-      ):null, // This trailing comma makes auto-formatting nicer for build methods.
+      floatingActionButton: _canFetch
+          ? FloatingActionButton(
+              onPressed: _fetchOrder,
+              tooltip: 'Increment',
+              child: Icon(Icons.add),
+            )
+          : null, // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
-
 
   Widget _buildMoreWidget() {
     return Padding(
@@ -180,7 +185,7 @@ class _MyHomePageState extends State<MyHomePage> {
               _fetchOrder();
             },
             child: Text('点击加载下一页',
-              style: TextStyle(color: const Color(0x8A000000))),
+                style: TextStyle(color: const Color(0x8A000000))),
           ),
         ],
       ),

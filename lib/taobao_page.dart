@@ -1,12 +1,12 @@
-library taobao_page;
+library flutter_taobao_page;
 
 import 'dart:io';
 import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:taobao_page/utils.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import 'package:flutter_taobao_page/utils.dart';
 
 typedef void PageFinishCallback(WebViewController controller, String url);
 
@@ -17,7 +17,6 @@ typedef void ReadyCallback();
 /// 淘宝数据webview.
 /// !!!最小化实现，不要考虑太多.
 class TaobaoPage extends StatefulWidget {
-
   /// 参数 `child` 不能为空
   TaobaoPage({
     Key key,
@@ -28,8 +27,8 @@ class TaobaoPage extends StatefulWidget {
     this.onCreated,
     this.onInit,
     this.onReady,
-  }) : assert(child != null),
-       super(key: key);
+  })  : assert(child != null),
+        super(key: key);
 
   /// iOS 和 Android 返回值有差异
   final isAndroid = Platform.isAndroid;
@@ -56,10 +55,9 @@ class TaobaoPage extends StatefulWidget {
 }
 
 class _TaobaoPageState extends State<TaobaoPage>
-  with AutomaticKeepAliveClientMixin<TaobaoPage> {
-
+    with AutomaticKeepAliveClientMixin<TaobaoPage> {
   final Completer<TaobaoPageController> _controller =
-    Completer<TaobaoPageController>();
+      Completer<TaobaoPageController>();
 
   @override
   bool get wantKeepAlive => true;
@@ -119,7 +117,7 @@ class _TaobaoPageState extends State<TaobaoPage>
 
     final TaobaoPageController m = TaobaoPageController._(widget, _webview);
     _controller.complete(m);
-    if (widget.onCreated!=null) widget.onCreated(m);
+    if (widget.onCreated != null) widget.onCreated(m);
   }
 
   /// 异步初始化
@@ -132,7 +130,7 @@ class _TaobaoPageState extends State<TaobaoPage>
   void _onPageFinished(String url) {
     String _url = url.split("?")[0];
     PageFinishCallback fn = _callbacks[_url];
-    if (fn!=null) fn(_webview, url);
+    if (fn != null) fn(_webview, url);
   }
 
   /// 登录页加载完成
@@ -144,15 +142,15 @@ class _TaobaoPageState extends State<TaobaoPage>
 
     /// 插入js: 点击登录时自动隐藏webview
 
-    if (widget.onInit!=null) widget.onInit();
+    if (widget.onInit != null) widget.onInit();
   }
 
   /// 主页加载完成
   void _afterHomePage(WebViewController controller, String url) {
-
     setState(() {
       /// 这里隐藏
       _showWebview = false;
+
       /// 设置登录成功
       _isLogin = true;
     });
@@ -163,16 +161,16 @@ class _TaobaoPageState extends State<TaobaoPage>
 
   /// 订单页加载完成
   void _afterOrderPage(WebViewController controller, String url) async {
-
     /// 插入js: 插入函数可以获取订单
     _webview.evaluateJavascript(_jscode).then((_) {
       print("im.zoe.taobao_page [INFO] insert javascipt code");
+
       /// 设置为ready
       setState(() {
         _ready = true;
       });
 
-      if (widget.onReady!=null) widget.onReady();
+      if (widget.onReady != null) widget.onReady();
     }).catchError((e) {
       print("im.zoe.taobao_page [ERROR] insert javascript code: $e");
     });
@@ -181,10 +179,11 @@ class _TaobaoPageState extends State<TaobaoPage>
   @override
   Widget build(BuildContext context) {
     return IndexedStack(
-      index: _showWebview?1:0,
+      index: _showWebview ? 1 : 0,
       children: <Widget>[
         /// 显示内容
         widget.child,
+
         /// webview
         WebView(
           initialUrl: widget.loginPage,
@@ -212,12 +211,15 @@ class TaobaoPageController {
   /// TODO: 缓存
   Future<Map<String, dynamic>> getOrder(int page, {int count = 20}) async {
     /// 请求js
-    var res = await _webview.evaluateJavascript(TaobaoJsCode.getOrder(page, count));
+    var res =
+        await _webview.evaluateJavascript(TaobaoJsCode.getOrder(page, count));
+
     /// 反序列化
     try {
-      Map<String, dynamic> _map = _widget.isAndroid?json.decode(json.decode(res)):json.decode(res);
+      Map<String, dynamic> _map =
+          _widget.isAndroid ? json.decode(json.decode(res)) : json.decode(res);
       return _map;
-    } catch(e) {
+    } catch (e) {
       return Future.error(e);
     }
   }
