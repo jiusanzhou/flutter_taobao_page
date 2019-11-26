@@ -1,8 +1,8 @@
-name: taobao_page
+name: flutter_taobao_page
 description: 淘宝数据webview.
 version: 0.0.1
 author: Zoe <hi@zoe.im>
-homepage: https://github.com/jiusanzhou/taobao_page
+homepage: https://github.com/jiusanzhou/flutter_taobao_page
 
 environment:
   sdk: ">=2.1.0 <3.0.0"
