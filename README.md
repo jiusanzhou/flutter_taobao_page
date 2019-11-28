@@ -1,6 +1,31 @@
+<div align="center">
+
 # taobao_page
 
-A flutter package 获取淘宝订单.
+A flutter package 淘宝个人数据抓取.
+
+</div>
+
+`flutter_taobao_page`是一个通过Webview来抓取淘宝数据的Flutter插件。
+
+### 特性
+
+- flutter插件
+- 原始Webview淘宝登录
+- 提供数据API
+- 多种Webview插件支持
+- 数据驱动
+
+### 数据项
+
+- [ ] 数据接口
+  - [x] 订单
+  - [ ] 登录
+- [ ] 主要功能
+  - [ ] 多种Webview插件支持
+  - [ ] 数据驱动
+
+如有更多接口需求欢迎提issue.
 
 ### 依赖
 
