@@ -79,11 +79,11 @@ class _TaobaoPageState extends State<TaobaoPage>
 
   /// 是否已经登录
   /// TODO: add user infomation
-  /// bool _isLogin = false;
+  bool _isLogin = false;
 
   /// 订单抓取准备就绪
   /// TODO: hard code
-  /// bool _ready;
+  bool _ready;
 
   // debug
   bool debug;
