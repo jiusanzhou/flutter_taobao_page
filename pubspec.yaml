@@ -1,6 +1,6 @@
 name: flutter_taobao_page
-description: 淘宝数据webview.
-version: 0.0.1
+description: 淘宝数据抓取. Scrape personal data from taobao by webview.
+version: 0.1.0
 author: Zoe <hi@zoe.im>
 homepage: https://github.com/jiusanzhou/flutter_taobao_page
 
