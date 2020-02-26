@@ -56,6 +56,7 @@ class TaobaoPage extends StatefulWidget {
 
 class _TaobaoPageState extends State<TaobaoPage>
     with AutomaticKeepAliveClientMixin<TaobaoPage> {
+
   final Completer<TaobaoPageController> _controller =
       Completer<TaobaoPageController>();
 
@@ -85,8 +86,11 @@ class _TaobaoPageState extends State<TaobaoPage>
   /// TODO: hard code
   bool _ready;
 
-  // debug
+  /// debug
   bool debug;
+
+  /// 保存Cookies
+  String Cookies;
 
   @override
   void initState() {
@@ -115,7 +119,7 @@ class _TaobaoPageState extends State<TaobaoPage>
   void _onWebViewCreated(WebViewController controller) {
     _webview = controller;
 
-    final TaobaoPageController m = TaobaoPageController._(widget, _webview);
+    final TaobaoPageController m = TaobaoPageController._(this, _webview);
     _controller.complete(m);
     if (widget.onCreated != null) widget.onCreated(m);
   }
@@ -161,6 +165,11 @@ class _TaobaoPageState extends State<TaobaoPage>
 
   /// 订单页加载完成
   void _afterOrderPage(WebViewController controller, String url) async {
+
+    Cookies = await _webview.evaluateJavascript("document.cookie");
+
+    print("im.zoe [INFO] current page's cookie: $Cookies");
+
     /// 插入js: 插入函数可以获取订单
     _webview.evaluateJavascript(_jscode).then((_) {
       print("im.zoe.taobao_page [INFO] insert javascipt code");
@@ -173,6 +182,16 @@ class _TaobaoPageState extends State<TaobaoPage>
       if (widget.onReady != null) widget.onReady();
     }).catchError((e) {
       print("im.zoe.taobao_page [ERROR] insert javascript code: $e");
+    });
+  }
+
+  void toggleWebview({bool show}) {
+    setState(() {
+      if (show==null) {
+        _showWebview = !_showWebview;
+        return;
+      }
+      _showWebview = show;
     });
   }
 
@@ -203,21 +222,38 @@ class TaobaoPageController {
     this._webview,
   );
 
-  TaobaoPage _widget;
+  _TaobaoPageState _widget;
 
   WebViewController _webview;
 
   /// 获取订单数据
   /// TODO: 缓存
-  Future<Map<String, dynamic>> getOrder(int page, {int count = 20}) async {
+  Future<Map<String, dynamic>> getOrder(int page, {int count = 20, String type = ""}) async {
     /// 请求js
     var res =
-        await _webview.evaluateJavascript(TaobaoJsCode.getOrder(page, count));
+        await _webview.evaluateJavascript(TaobaoJsCode.getOrder(page, count, type));
 
     /// 反序列化
     try {
       Map<String, dynamic> _map =
-          _widget.isAndroid ? json.decode(json.decode(res)) : json.decode(res);
+          _widget.widget.isAndroid ? json.decode(json.decode(res)) : json.decode(res);
+      return _map;
+    } catch (e) {
+      return Future.error(e);
+    }
+  }
+
+  /// 获取订单物流数据
+  /// TODO: 缓存
+  Future<Map<String, dynamic>> getTranSteps(String orderId) async {
+    /// 请求js
+    var res =
+        await _webview.evaluateJavascript(TaobaoJsCode.getTranSteps(orderId));
+
+    /// 反序列化
+    try {
+      Map<String, dynamic> _map = 
+          _widget.widget.isAndroid ? json.decode(json.decode(res)) : json.decode(res);
       return _map;
     } catch (e) {
       return Future.error(e);
@@ -229,6 +265,11 @@ class TaobaoPageController {
     /// TODO: 初始化变量
 
     /// 重新加载
-    _webview.loadUrl(_widget.loginPage);
+    _webview.loadUrl(_widget.widget.loginPage);
+  }
+
+  /// debug
+  void toggleWebview({bool show}) {
+    _widget.toggleWebview(show: show);
   }
 }
