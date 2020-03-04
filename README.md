@@ -90,9 +90,15 @@ class _MyHomePageState extends State<MyHomePage> {
 }
 ```
 
+- 订单详情
+
+  ```_controller.apiOrderDetail("xxxx")```
+
 - 订单物流
 
   ```_controller.apiTradeDetail("xxxx")```
+
+  更详细的收获地址信息,如收货人可在订单详情内获得.
 
 详细内容参考示例: [example/lib/main.dart](./example/lib/main.dart)
 
