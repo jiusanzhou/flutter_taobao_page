@@ -1,8 +1,9 @@
-## [0.1.0] - Improve package rate.
+## [0.2.1] - Add support for h5 page
 
-* Fix health suggestions
-* Fix Maintenance issues and suggestions
+* Repace flutter_web with inappwebview
+* Add trade detail request
 
-## [0.0.1] - TODO: Add release date.
+## [0.2.0] - Implement order list with web page
 
-* TODO: Describe initial release.
+* Finish web script flow
+* Add order list request
