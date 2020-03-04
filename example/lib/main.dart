@@ -119,7 +119,13 @@ class _MyHomePageState extends State<MyHomePage> {
               // Here we take the value from the MyHomePage object that was created by
               // the App.build method, and use it to set our appbar title.
               title: GestureDetector(
-                child: Text("${widget.title} v0.2.0"),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    Text("${widget.title} v0.2.1"),
+                    HackKeepAlive(),
+                  ],
+                ),
                 onDoubleTap: () {
                   _controller.toggleWebview();
                 },
@@ -180,13 +186,6 @@ class _MyHomePageState extends State<MyHomePage> {
                       ),
               ),
             ),
-            floatingActionButton: _canFetch
-                ? FloatingActionButton(
-                    onPressed: () => _fetchOrder(DefaultTabController.of(context).index),
-                    tooltip: 'Increment',
-                    child: Icon(Icons.add),
-                  )
-                : null, // This trailing comma makes auto-formatting nicer for build methods.
           );
         },
       )
@@ -234,7 +233,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       textColor: Colors.white,
                       onPressed: () {
                         // 加载数据
-                        _reloadTransData("${order["id"]}");
+                        _loadTradeDetail("${order["id"]}");
                         showDialog(
                           context: context,
                           builder: (BuildContext context) {
@@ -272,13 +271,13 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  void _reloadTransData(String orderId) async {
-    print("===> 即将获取物流 $orderId");
-    _controller.getTranSteps(orderId).then((res) {
-      print("获得物流数据 => $res");
-      _transDataController.add(res);
-    }).catchError((e){
-      print("获取物流信息失败: $e");
+  void _loadTradeDetail(String orderId) async {
+    print("===> 即将获取订单物流详情 $orderId");
+    _controller.getTradeDetail(orderId).then((value) {
+      print("得到订单物流详情 $value");
+      _transDataController.add(value);
+    }).catchError((e) {
+      print("获取订单物流详情错误: $e");
     });
   }
 
@@ -307,20 +306,28 @@ class _MyHomePageState extends State<MyHomePage> {
       );
     }
 
-    String _success = _currentTransData["isSuccess"];
-    if (_success != "true") {
+    if (_currentTransData["ret"][0]!="SUCCESS::调用成功") {
+      // 失败
       return Container(
-        child: Text("请求失败~"),
+        child: Text(_currentTransData["ret"][0]),
         padding: EdgeInsets.all(20),
       );
     }
 
-    List<dynamic> steps = _currentTransData["address"];
+    Map<String, dynamic> order = _currentTransData["data"]["orderList"][0];
+    List<dynamic> steps = order["transitList"]??[];
 
     return SingleChildScrollView(
       child: ListBody(
         children: <Widget>[
-          Text("${_currentTransData["expressName"]}: ${_currentTransData["expressId"]}", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+          Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: <Widget>[
+              Text("${order["partnerName"]}: ${order["subTitle2"]}", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+              Text("${order["subtitle1"]}", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+              Text("收获地址: ${order["addr"]}", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+            ],
+          ),
           Column(
             children: List.generate(steps.length, (index) {
               Map<String, dynamic> info = steps[index];
@@ -335,7 +342,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    Text("${info["place"]}"),
+                    Text("${info["message"]}"),
                     Text("${info["time"]}"),
                   ]
                 ),
