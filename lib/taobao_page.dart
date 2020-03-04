@@ -8,15 +8,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_taobao_page/utils.dart';
 
-import 'utils.dart';
-import 'utils.dart';
-import 'utils.dart';
-import 'utils.dart';
-import 'utils.dart';
-import 'utils.dart';
-import 'utils.dart';
-import 'utils.dart';
-
 typedef void PageFinishCallback(InAppWebViewController controller, String url);
 
 typedef void OnCreatedCallback(TaobaoPageController controller);
