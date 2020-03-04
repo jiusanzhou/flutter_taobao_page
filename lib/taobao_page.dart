@@ -5,10 +5,19 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:webview_flutter/webview_flutter.dart';
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_taobao_page/utils.dart';
 
-typedef void PageFinishCallback(WebViewController controller, String url);
+import 'utils.dart';
+import 'utils.dart';
+import 'utils.dart';
+import 'utils.dart';
+import 'utils.dart';
+import 'utils.dart';
+import 'utils.dart';
+import 'utils.dart';
+
+typedef void PageFinishCallback(InAppWebViewController controller, String url);
 
 typedef void OnCreatedCallback(TaobaoPageController controller);
 typedef void InitCallback();
@@ -31,7 +40,8 @@ class TaobaoPage extends StatefulWidget {
         super(key: key);
 
   /// iOS 和 Android 返回值有差异
-  final isAndroid = Platform.isAndroid;
+  /// inapp 不需要
+  final isAndroid = false; // Platform.isAndroid;
 
   /// 创建初始化函数
   final OnCreatedCallback onCreated;
@@ -65,7 +75,10 @@ class _TaobaoPageState extends State<TaobaoPage>
 
   /// webview 控制器
   /// 后续所有操作都是通过她来进行
-  WebViewController _webview;
+  InAppWebViewController _webview;
+
+  /// TODO: 
+  InAppWebViewController _webview2;
 
   /// 路径回调函数
   /// 通过注册的方式添加
@@ -85,6 +98,7 @@ class _TaobaoPageState extends State<TaobaoPage>
   /// 订单抓取准备就绪
   /// TODO: hard code
   bool _ready;
+  bool _ready2; // 详情页面就绪
 
   /// debug
   bool debug;
@@ -103,6 +117,9 @@ class _TaobaoPageState extends State<TaobaoPage>
     _callbacks[widget.homePage] = _afterHomePage;
     _callbacks[widget.orderPage] = _afterOrderPage;
 
+    // webview2 也用这个, TODO: 更改状态
+    _callbacks[TaobaoUrls.homePageMain] = null;
+
     _initAsync();
   }
 
@@ -116,7 +133,7 @@ class _TaobaoPageState extends State<TaobaoPage>
     super.didUpdateWidget(old);
   }
 
-  void _onWebViewCreated(WebViewController controller) {
+  void _onWebViewCreated(InAppWebViewController controller) {
     _webview = controller;
 
     final TaobaoPageController m = TaobaoPageController._(this, _webview);
@@ -131,17 +148,18 @@ class _TaobaoPageState extends State<TaobaoPage>
 
   /// 处理回调函数
   /// TODO: 使用精准方式匹配
-  void _onPageFinished(String url) {
+  void _onPageFinished(InAppWebViewController controller, String url) {
     String _url = url.split("?")[0];
     PageFinishCallback fn = _callbacks[_url];
     if (fn != null) fn(_webview, url);
   }
 
   /// 登录页加载完成
-  void _afterLoginPage(WebViewController controller, String url) {
+  void _afterLoginPage(InAppWebViewController controller, String url) {
     /// 设置为显示webview
     setState(() {
       _showWebview = true;
+      _showIndex = 1;
     });
 
     /// 插入js: 点击登录时自动隐藏webview
@@ -150,28 +168,25 @@ class _TaobaoPageState extends State<TaobaoPage>
   }
 
   /// 主页加载完成
-  void _afterHomePage(WebViewController controller, String url) {
+  void _afterHomePage(InAppWebViewController controller, String url) {
     setState(() {
       /// 这里隐藏
       _showWebview = false;
+      _showIndex = 0;
 
       /// 设置登录成功
       _isLogin = true;
     });
 
     /// 加载到订单页面
-    _webview.loadUrl(widget.orderPage);
+    _webview.loadUrl(url: widget.orderPage);
   }
 
   /// 订单页加载完成
-  void _afterOrderPage(WebViewController controller, String url) async {
-
-    Cookies = await _webview.evaluateJavascript("document.cookie");
-
-    print("im.zoe [INFO] current page's cookie: $Cookies");
+  void _afterOrderPage(InAppWebViewController controller, String url) async {
 
     /// 插入js: 插入函数可以获取订单
-    _webview.evaluateJavascript(_jscode).then((_) {
+    _webview.evaluateJavascript(source: _jscode).then((_) {
       print("im.zoe.taobao_page [INFO] insert javascipt code");
 
       /// 设置为ready
@@ -185,30 +200,56 @@ class _TaobaoPageState extends State<TaobaoPage>
     });
   }
 
+  void _afterHomePageMain(InAppWebViewController controller, String url) async {
+    _webview.evaluateJavascript(source: _jscode).then((_) {
+      print("im.zoe.taobao_page [INFO] insert javascipt code");
+    });
+  }
+
+  Map<String, Completer> _waitCompleters = {};
+
+  /// 内容处理
+  dynamic _onPostDataHandler(List<dynamic> arguments) {
+    _waitCompleters.remove(arguments[0])?.complete(arguments[1]);
+    return "";
+  }
+
+  /// 增加多个webview
+
+  int _showIndex = 0;
+
   void toggleWebview({bool show}) {
     setState(() {
-      if (show==null) {
-        _showWebview = !_showWebview;
-        return;
-      }
-      _showWebview = show;
+      // page max
+      _showIndex = _showIndex == 2 ? 0 : (_showIndex+1);
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return IndexedStack(
-      index: _showWebview ? 1 : 0,
+      index: _showIndex,
       children: <Widget>[
         /// 显示内容
         widget.child,
 
         /// webview
-        WebView(
+        InAppWebView(
           initialUrl: widget.loginPage,
-          javascriptMode: JavascriptMode.unrestricted,
+          initialOptions: InAppWebViewWidgetOptions(inAppWebViewOptions: InAppWebViewOptions(javaScriptEnabled: true)),
           onWebViewCreated: _onWebViewCreated,
-          onPageFinished: _onPageFinished,
+          onLoadStop: _onPageFinished,
+        ),
+
+        /// TODO: 自动管理页面标签
+        InAppWebView(
+          initialUrl: TaobaoUrls.homePageMain, // 登录前前面不要做任何事情
+          initialOptions: InAppWebViewWidgetOptions(inAppWebViewOptions: InAppWebViewOptions(javaScriptEnabled: true)),
+          onWebViewCreated: (controller) {
+            _webview2 = controller;
+            _webview2.addJavaScriptHandler(handlerName: "PostData", callback: _onPostDataHandler);
+          },
+          onLoadStop: _onPageFinished,
         ),
       ],
     );
@@ -224,14 +265,14 @@ class TaobaoPageController {
 
   _TaobaoPageState _widget;
 
-  WebViewController _webview;
+  InAppWebViewController _webview;
 
   /// 获取订单数据
   /// TODO: 缓存
   Future<Map<String, dynamic>> getOrder(int page, {int count = 20, String type = ""}) async {
     /// 请求js
     var res =
-        await _webview.evaluateJavascript(TaobaoJsCode.getOrder(page, count, type));
+        await _webview.evaluateJavascript(source: TaobaoJsCode.getOrder(page, count, type));
 
     /// 反序列化
     try {
@@ -248,7 +289,7 @@ class TaobaoPageController {
   Future<Map<String, dynamic>> getTranSteps(String orderId) async {
     /// 请求js
     var res =
-        await _webview.evaluateJavascript(TaobaoJsCode.getTranSteps(orderId));
+        await _webview.evaluateJavascript(source: TaobaoJsCode.getTranSteps(orderId));
 
     /// 反序列化
     try {
@@ -260,16 +301,65 @@ class TaobaoPageController {
     }
   }
 
+  /// 获取订单详情
+  Future<dynamic> getOrderDetail(String orderId, {Duration timeout: const Duration(seconds: 10)}) async {
+    Completer completer = Completer();
+    _widget._waitCompleters["order_detail_$orderId"] = completer;
+    await _widget._webview2.evaluateJavascript(source: TaobaoJsCode.apiOrderDetail(orderId));
+    return completer.future.timeout(timeout, onTimeout: () {
+      _widget._waitCompleters.remove("order_detail_$orderId");
+      return Future.error("执行任务超时($timeout)");
+    });
+  }
+
+  /// 获取物流详情
+  Future<dynamic> getTradeDetail(String orderId, {Duration timeout: const Duration(seconds: 10)}) async {
+    Completer completer = Completer();
+    _widget._waitCompleters["trade_detail_$orderId"] = completer;
+    await _widget._webview2.evaluateJavascript(source: TaobaoJsCode.apiTradeDetail(orderId));
+    return completer.future.timeout(timeout, onTimeout: () {
+      _widget._waitCompleters.remove("order_detail_$orderId");
+      return Future.error("执行任务 $orderId 超时($timeout)");
+    });
+  }
+
   /// 重置
   void reset() {
     /// TODO: 初始化变量
 
     /// 重新加载
-    _webview.loadUrl(_widget.widget.loginPage);
+    _webview.loadUrl(url: _widget.widget.loginPage);
   }
 
   /// debug
   void toggleWebview({bool show}) {
     _widget.toggleWebview(show: show);
   }
+}
+
+
+class HackKeepAlive extends StatefulWidget {
+
+  HackKeepAlive();
+
+  @override
+  _HackKeepAliveState createState() => _HackKeepAliveState();
+}
+
+class _HackKeepAliveState extends State<HackKeepAlive> with AutomaticKeepAliveClientMixin {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 5,
+      height: 5,
+      child: InAppWebView(
+        initialUrl: TaobaoUrls.homePageMain,
+        initialOptions: InAppWebViewWidgetOptions(inAppWebViewOptions: InAppWebViewOptions(javaScriptEnabled: true)),
+      ),
+    );
+  }
+
+  // Setting to true will force the tab to never be disposed. This could be dangerous.
+  @override
+  bool get wantKeepAlive => true;
 }

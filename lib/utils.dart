@@ -6,11 +6,22 @@ class TaobaoUrls {
   /// 主页,用于判断登录成功
   static const String homePage = "https://h5.m.taobao.com/mlapp/mytaobao.html";
 
+  /// 主页
+  static const String homePageMain = "https://main.m.taobao.com";
+
   /// 订单页
   static const String orderPage =
       "https://buyertrade.taobao.com/trade/itemlist/list_bought_items.htm";
 
   // 天猫订单详情
+  static String tmallOrderDetailPage(String id) {
+    return "https://trade.tmall.com/detail/orderDetail.htm?bizOrderId=$id";
+  }
+
+  // 淘宝订单详情
+  static String taobaoOrdderDetailPage(String id) {
+    return "https://trade.taobao.com/trade/detail/trade_order_detail.htm?biz_order_id=$id";
+  }
 }
 
 /// 默认执行js
@@ -23,6 +34,32 @@ class TaobaoJsCode {
   // 订单列表页
   static const String orderPage = """((_) => {
     _._im_zoe = {
+        postdata: (channel, data) => {
+          window.flutter_inappwebview.callHandler('PostData', channel, data)
+        },
+        taobao_api: {
+          getOrderDetail: (orderId) => {
+            let data = {
+                api: 'mtop.order.querydetail',
+                v: '4.0',
+                data: {appVersion:'1.0',appName:'tborder',bizOrderId:`\${orderId}`},
+                ttid: "2018@taobao_h5_7.9.1",
+                isSec: '0',
+                ecode: '0',
+                AntiFlood: true,
+                AntiCreep: true,
+                needLogin: true,
+                LoginRequest: true,
+            }
+            lib.mtop.H5Request(data).then(r => {
+              _._im_zoe.postdata(`order_detail_\${orderId}`, r)
+            }).catch(e => {
+              _._im_zoe.postdata(`order_detail_\${orderId}`, e)
+            })
+
+            return '=='
+          }
+        },
         taobao_page: {
             getOrder: (page = 1, count = 20, tabCode = "") => {
                 let r = new XMLHttpRequest()
@@ -45,12 +82,6 @@ class TaobaoJsCode {
                 r.send()
                 return r.status === 200 ? r.responseText : null
             },
-            getOrderDetail: () => {
-              // we must be called in order detail page
-              if (location.host === 'trade.taobao.com') return data
-              if (location.host === 'trade.tmall.com') return detailData
-              return null
-            },
         }
     }
 })(window)""";
@@ -72,8 +103,15 @@ class TaobaoJsCode {
 
   /// 主动调用
   /// 
-  /// 获取订单详情 - 仅在打开后订单详情也后调用
-  static String getOrderDetail() {
-    return "_im_zoe.taobao_page.getOrderDetail()";
+  /// 获取订单详情
+  static String apiOrderDetail(String orderId) {
+    return "lib.mtop.H5Request({api:'mtop.order.querydetail',v:'4.0',timeout:30000,data:{appVersion:'1.0',appName:'tborder',bizOrderId:'$orderId'},dataType:'json',ttid:'##h5',H5Request:true,isSec:'0',ecode:'0',AntiFlood:true,AntiCreep:true,needLogin:true,LoginRequest:true}).then(r=>{flutter_inappwebview.callHandler('PostData','order_detail_$orderId',r)}).catch(e=>flutter_inappwebview.callHandler('PostData','order_detail_$orderId',e));''";
+  }
+
+  /// 主动调用
+  /// 
+  /// 获取物流信息
+  static String apiTradeDetail(String orderId) {
+    return "lib.mtop.H5Request({api:'mtop.cnwireless.cnlogisticdetailservice.querylogisdetailbytradeid',v:'1.0',timeout:30000,data:{orderId:'$orderId'},dataType:'json',ttid:'##h5',H5Request:true,isSec:'0',ecode:'0',AntiFlood:true,AntiCreep:true,needLogin:true,LoginRequest:true}).then(r=>{flutter_inappwebview.callHandler('PostData','trade_detail_$orderId',r)}).catch(e=>flutter_inappwebview.callHandler('PostData','trade_detail_$orderId',e));''";
   }
 }
