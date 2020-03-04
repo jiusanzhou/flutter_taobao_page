@@ -1,6 +1,6 @@
 name: flutter_taobao_page
 description: Scrape personal data from taobao(淘宝) by webview in a application.
-version: 0.2.0
+version: 0.2.1
 author: Zoe <hi@zoe.im>
 homepage: https://github.com/jiusanzhou/flutter_taobao_page
 
@@ -10,8 +10,6 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-
-  # webview_flutter: ^0.3.15+1
   flutter_inappwebview: ^2.1.0+1
 
 dev_dependencies:
