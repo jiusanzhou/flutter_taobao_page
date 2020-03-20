@@ -1,7 +1,8 @@
 import 'dart:async';
 
+import 'package:example/home.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_taobao_page/taobao_page.dart';
+import 'package:flutter_taobao_page/taobao_page_0.dart';
 
 void main() => runApp(MyApp());
 
@@ -25,7 +26,7 @@ class MyApp extends StatelessWidget {
         primaryColor: Colors.blue,
         primarySwatch: Colors.blue,
       ),
-      home: MyHomePage(title: '淘宝数据 Demo'),
+      home: HomePage(title: '淘宝数据 Demo'),
     );
   }
 }
@@ -97,7 +98,6 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
   }
 

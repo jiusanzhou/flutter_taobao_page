@@ -1,3 +1,5 @@
+import 'dart:math';
+
 /// 默认淘宝链接
 class TaobaoUrls {
   /// 登录页面
@@ -21,6 +23,14 @@ class TaobaoUrls {
   // 淘宝订单详情
   static String taobaoOrdderDetailPage(String id) {
     return "https://trade.taobao.com/trade/detail/trade_order_detail.htm?biz_order_id=$id";
+  }
+
+  static bool isLoginPage(String url) {
+    return url.indexOf("login.m.taobao.com/login.htm") > 0;
+  }
+
+  static bool isMyHomePage(String url) {
+    return url.indexOf("h5.m.taobao.com/mlapp/mytaobao.htm") > 0;
   }
 }
 
@@ -114,4 +124,14 @@ class TaobaoJsCode {
   static String apiTradeDetail(String orderId) {
     return "lib.mtop.H5Request({api:'mtop.cnwireless.cnlogisticdetailservice.querylogisdetailbytradeid',v:'1.0',timeout:30000,data:{orderId:'$orderId'},dataType:'json',ttid:'##h5',H5Request:true,isSec:'0',ecode:'0',AntiFlood:true,AntiCreep:true,needLogin:true,LoginRequest:true}).then(r=>{flutter_inappwebview.callHandler('PostData','trade_detail_$orderId',r)}).catch(e=>flutter_inappwebview.callHandler('PostData','trade_detail_$orderId',e));''";
   }
+}
+
+
+class Utils {
+    static final Random _random = Random.secure();
+
+    static String randomString([int length = 12]) {
+      var codeUnits = new List.generate(length, (index) => _random.nextInt(23)+65);
+      return String.fromCharCodes(codeUnits);
+    }
 }
