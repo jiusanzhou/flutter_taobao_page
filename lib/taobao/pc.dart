@@ -45,30 +45,30 @@ class PCWeb {
 
 class PCCode {
   static String userBaseInfo() {
-    return """let _tmp_nick = document.querySelector('#J_uniqueName');
-let _tmp_logo = document.querySelector('a.pf-avatar > img');
+    return """var _tmp_nick = document.querySelector('#J_uniqueName');
+var _tmp_logo = document.querySelector('a.pf-avatar > img');
 return {nickname: _tmp_nick?_tmp_nick.value:null, logo: _tmp_logo?_tmp_logo.src:null}""";
   }
 
   static String accountProfile() {
-    return """let tmp = document.querySelector('#ah\\\\:addressForm');
+    return """var tmp = document.querySelector('#ah\\\\:addressForm');
       if ( !tmp ) throw("查询DOM节点失败");
-      let _score = document.querySelector('.tao-score');
+      var _score = document.querySelector('.tao-score');
       return {
         tao_score: _score?_score.innerText:null,
         realname: tmp.querySelector('li:nth-child(1) > strong').innerText,
         email: tmp.querySelector('li:nth-child(2) > strong').innerText,
         gender: tmp.querySelector('li:nth-child(3) > input[type=hidden]').getAttribute('value'),
-        birth: Array.from(tmp.querySelectorAll('li:nth-child(4) > input')).map(i=>i.value).join('-'),
+        birth: Array.from(tmp.querySelectorAll('li:nth-child(4) > input')).map(function(i){return i.value}).join('-'),
         avatar: document.querySelector('#J_MtAvatarBox > a > img').src,
       }
 """;
   }
 
   static String accountSecurity() {
-    return """let data = {};
-let _get = (obj, key) => { return obj?obj[key]:null }
-Array.from(document.querySelectorAll('#main-content > dl > dd:nth-child(2) > ul > li')).map(i => {
+    return """var data = {};
+var _get = function(obj, key) { return obj?obj[key]:null }
+Array.from(document.querySelectorAll('#main-content > dl > dd:nth-child(2) > ul > li')).map(function(i) {
     if (!i) return
     data[_get(i.querySelector('span:nth-child(1)'), 'innerText')] = _get(i.querySelector('span:nth-child(2)'), 'innerText')
 });
@@ -77,34 +77,34 @@ return data
   }
 
   static String certityInfo() {
-    return """let tmps = document.querySelectorAll('#main-content > div > div.certify-info > div.msg-box-content > .explain-info');
-let _score = document.querySelector('.tao-score');
+    return """var tmps = document.querySelectorAll('#main-content > div > div.certify-info > div.msg-box-content > .explain-info');
+var _score = document.querySelector('.tao-score');
 return {
   tao_score: _score?_score.innerText:null,
-  idcard_infos: Array.from(tmps).map(i => i.innerText),
+  idcard_infos: Array.from(tmps).map(function(i) {return i.innerText}),
 }""";
   }
 
   static String vipScore() {
     // TODO: request can be in common
-    return """let r = new XMLHttpRequest();
+    return """var r = new XMLHttpRequest();
 r.open('GET', 'https://vip.taobao.com/ajax/getGoldUser.do?_input_charset=utf-8&from=diaoding', null);
 r.send(null);
-if ( r.status === 200 ) { let res = JSON.parse(r.responseText); return res.data }
+if ( r.status === 200 ) { var res = JSON.parse(r.responseText); return res.data }
 throw(r.responseText)
 """;
   }
 
   static String rateScore() {
-    return """let buyertmp = document.querySelector('#new-rate-content > div.clearfix.personal-info > div.personal-rating > h4.tb-rate-ico-bg.ico-buyer');
-let sellertmp = document.querySelector('#new-rate-content > div.clearfix.personal-info > div.personal-rating > h4.tb-rate-ico-bg.ico-seller');
-let _score = document.querySelector('.tao-score');
-let data = {
+    return """var buyertmp = document.querySelector('#new-rate-content > div.clearfix.personal-info > div.personal-rating > h4.tb-rate-ico-bg.ico-buyer');
+var sellertmp = document.querySelector('#new-rate-content > div.clearfix.personal-info > div.personal-rating > h4.tb-rate-ico-bg.ico-seller');
+var _score = document.querySelector('.tao-score');
+var data = {
     buyer: {
         tao_score: _score?_score.innerText:null,
         summary: buyertmp.querySelector('a:nth-child(1)').innerText,
         rankimg: buyertmp.querySelector('a:nth-child(2) > img').src,
-        ratings: Array.from(document.querySelectorAll('#new-rate-content > div.clearfix.personal-info > div.personal-rating > table.tb-rate-table.align-c.thm-plain > tbody > tr')).map(i => Array.from(i.querySelectorAll('td')).map(i => i.innerText)),
+        ratings: Array.from(document.querySelectorAll('#new-rate-content > div.clearfix.personal-info > div.personal-rating > table.tb-rate-table.align-c.thm-plain > tbody > tr')).map(function(i) {return Array.from(i.querySelectorAll('td')).map(function(i) {return i.innerText})}),
     },
 };
 if (sellertmp) {
@@ -112,7 +112,7 @@ if (sellertmp) {
         summary: sellertmp.querySelector('a:nth-child(1)').innerText,
         rankimg: sellertmp.querySelector('img').src,
     }
-    data.buyer.ratings = Array.from(document.querySelectorAll('#new-rate-content > div.clearfix.personal-info > div.personal-rating > table:nth-child(8) > tbody > tr')).map(i => Array.from(i.querySelectorAll('td')).map(i => i.innerText))
+    data.buyer.ratings = Array.from(document.querySelectorAll('#new-rate-content > div.clearfix.personal-info > div.personal-rating > table:nth-child(8) > tbody > tr')).map(function(i) {return Array.from(i.querySelectorAll('td')).map(function(i) {return i.innerText})})
 }
 return data
 """;
@@ -128,13 +128,13 @@ return {
 
   /// 退款管理
   static String dispute() {
-    return """let keys = Object.keys(disputeData.data||{}).filter(i => i.indexOf('disputeListGrid') === 0);
-return { orders: keys.map(i=>disputeData.data[i]) }
+    return """var keys = Object.keys(disputeData.data||{}).filter(function(i) {return i.indexOf('disputeListGrid') === 0});
+return { orders: keys.map(function(i) {return disputeData.data[i]}) }
 """;
   }
 
   static String order(int page, {int count = 20, String type = ""}) {
-    return """let r = new XMLHttpRequest()
+    return """var r = new XMLHttpRequest()
 r.open(
     'POST',
     'https://buyertrade.taobao.com/trade/itemlist/asyncBought.htm?action=itemlist/BoughtQueryAction&event_submit_do_query=1&_input_charset=utf8&tabCode=$type',

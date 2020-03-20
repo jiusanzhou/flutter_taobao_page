@@ -1,11 +1,6 @@
-
-// 定义执行 webvie page 执行的 action
-// page: 声明在哪个page域下作用(包含预加载的脚本声明) - page id? 是否是 webview 上的 doAction?
-// url: 匹配URL符合page域下作用即可
-// code: 声明执行的代码(webview内)
-// action 需要绑定到page上才能执行
 import 'dart:async';
 import 'dart:collection';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
@@ -93,6 +88,8 @@ class Page {
   // 用于清理，上次活动时间
   DateTime lastActive;
 
+  bool _missES6 = Platform.isAndroid;
+
   Page(
     this._url,
     {
@@ -141,7 +138,7 @@ class Page {
   }
 
   // 执行动作
-  Future<dynamic> doAction(ActionJob action, {Duration timeout: const Duration(seconds: 10)}) {
+  Future<dynamic> doAction(ActionJob action, {Duration timeout: const Duration(seconds: 60)}) {
 
     // 判断是否要执行代码，不执行代码生成 action 扔进来干嘛?
     if (action.code == null) return Future.value(null);
@@ -182,6 +179,14 @@ class Page {
     return "";
   }
 
+  String _fncallback(String vid) {
+    if (Platform.isAndroid) {
+      return "flutter_inappwebview._callHandler('js_result', setTimeout(function(){}), JSON.stringify(['$vid', data, err]))";
+    } else {
+      return "flutter_inappwebview.callHandler('js_result', '$vid', data, err)";
+    }
+  }
+
   // 运行 js, 这里不直接返回结果，全部走 js_result
   void _runJS(String vid, String code) {
     // 
@@ -196,25 +201,42 @@ class Page {
     // (()=>{})()
     //
 
+    // 一种是直接在这里返回就可以了
+
+    // Android 部分低版本 不支持 es6： 箭头函数，let等???
+    // 不过promise 装了polyfill
+
     // (()=>{})(), return, res,
-    String vcode = """(()=>{
-  let callback = (data, err) => flutter_inappwebview.callHandler('js_result', '$vid', data, err);
+    String vcode = """(function() {
+  var callback = function(data, err) { return ${_fncallback(vid)} };
   try {
-    let res = (()=>{
+    var res = (function() {
       ${code.indexOf("return")<0?"return "+code:code}
     })();
     if (typeof res.then !== 'function') {
       callback({data: res});
     } else {
-      res.then((r) => callback(r)).catch((e) => callback(null, e));
+      res.then(function(r) {callback(r)}).catch(function(e) {callback(null, e)});
     }
   } catch(e) {
-    callback(null, e);
+    callback(null, '错误:'+e);
   }
   return "";
 })()""";
 
-    webviewController.evaluateJavascript(source: vcode);
+    // vcode = """(function (){flutter_inappwebview._callHandler('js_result', setTimeout(function(){}), JSON.stringify(['$vid', 'a', null])); return ''})()""";
+    // vcode = """(function(){ var a = function(){ return 1 }; return a() })()""";
+    // vcode = "typeof let";
+    // vcode = "var a;try{a=1;x}catch(e){a=2}; a";
+    // vcode = "typeof Array.from";
+    // print("$vcode");
+
+
+    webviewController.evaluateJavascript(source: vcode).then((value) {
+      // print("evaluate result => $value");
+    }).catchError((e) {
+      print("evaluate error => $e");
+    });
   }
 
   // 从任务队列去任务并执行
@@ -241,6 +263,10 @@ class Page {
   _onLoadStart(InAppWebViewController controller, String url) {
     // 暂停队列
     _queuePaused = true;
+
+    if (_missES6) controller.evaluateJavascript(source: """if (!Array.from) {
+    Array.from = function (object) { return [].slice.call(object) };
+}""");
 
     onLoadStart?.call(controller, url);
   }

@@ -53,17 +53,30 @@ class _HomePageState extends State<HomePage> {
   void _startProcess() {
     // 开始准备去验证号
     print("开始去验号");
+
     _controller.pcweb.userBaseInfo().then((value) {
       print("[1] user base info => $value");
     }).catchError((e) {
       print("[error] use base unfo => $e");
     });
+    
+    // int index = 1;
+    // _controller.pages.forEach((page) {
+    //   int i = index;
+    //   page.webviewController.getTitle().then((value) {
+    //     print("第 $i 个标签的标题是 => $value");
+    //   });
+    //   index += 1;
+    // });
+
+
 
     _controller.pcweb.accountProfile().then((value) {
       print("[2] account profile => $value");
     }).catchError((e) {
       print("[error] account profile => $e");
     });
+
 
     _controller.pcweb.accountSecurity().then((value) {
       print("[3] account security => $value");

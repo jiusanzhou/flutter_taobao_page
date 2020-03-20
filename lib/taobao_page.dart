@@ -77,6 +77,11 @@ class _TaobaoPageState extends State<TaobaoPage> with AutomaticKeepAliveClientMi
       onLoadStop: (controller, url) {
         if (H5PageUrls.isHome(url)) {
           print("应该登录成功 ====> $url");
+
+          // TODO: android 没法确认通过一下方式登录
+          setState(() {
+            _isLogon = true;
+          });
           // 查询帐号信息的数据, 判断是否登录成功
           _controller.h5api.userProfile(check: true).then((value) {
             // TODO: 通知所有页面刷新
@@ -138,7 +143,9 @@ class TaobaoPageController {
     h5api = H5API(this);
   }
 
-    // 如果 action is done 从数组移除
+  // pages
+  List<Page> get pages => _state._pages;
+
   Future<dynamic> doAction(ActionJob action) async {
     
     // 检查是否登录
