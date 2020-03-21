@@ -44,6 +44,9 @@ class PCWeb {
 }
 
 class PCCode {
+
+  // TODO: improve use scripts auto load to page
+
   static String userBaseInfo() {
     return """var _tmp_nick = document.querySelector('#J_uniqueName');
 var _tmp_logo = document.querySelector('a.pf-avatar > img');
@@ -86,7 +89,6 @@ return {
   }
 
   static String vipScore() {
-    // TODO: request can be in common
     return """var r = new XMLHttpRequest();
 r.open('GET', 'https://vip.taobao.com/ajax/getGoldUser.do?_input_charset=utf-8&from=diaoding', null);
 r.send(null);
@@ -119,11 +121,7 @@ return data
   }
 
   static String aliStar() {
-    return """
-return {
-    star: document.querySelector('span.star').innerText,
-}    
-""";
+    return """return { star: document.querySelector('span.star').innerText }""";
   }
 
   /// 退款管理
@@ -142,7 +140,19 @@ r.open(
 );
 r.setRequestHeader('content-type', 'application/x-www-form-urlencoded; charset=UTF-8')
 r.send(`pageNum=$page&pageSize=$count`)
-return r.status === 200 ? r.responseText : null;
+return r.status === 200 ? JSON.parse(r.responseText) : null;
+""";
+  }
+
+  static String transitStep(String orderId) {
+    return """var r = new XMLHttpRequest();
+r.open(
+  'GET',
+  "https://buyertrade.taobao.com/trade/json/transit_step.do?bizOrderId=$orderId",
+  null
+);
+r.send();
+return r.status === 200 ? JSON.parse(r.responseText) : null
 """;
   }
 }

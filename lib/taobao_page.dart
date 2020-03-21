@@ -2,28 +2,24 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_taobao_page/action_page.dart';
+import 'package:flutter_taobao_page/event.dart';
 import 'package:flutter_taobao_page/page_view.dart';
 import 'package:flutter_taobao_page/taobao/h5.dart';
 import 'package:flutter_taobao_page/taobao/pc.dart';
+import 'package:flutter_taobao_page/utils.dart';
 import 'package:flutter_taobao_page/webview.dart';
 
 class TaobaoPage extends StatefulWidget {
 
-  // 最大同时打开页面数, 默认 1
   final int maxTab;
 
-  // 显示模式, 默认 stack
   final ViewMode mode;
 
-  // 显示的元素, 替换webview内容
   final Widget child;
 
-  // 注册初始化函数
   final void Function(TaobaoPageController controller) onCreated;
 
-  // 注册帐号登录函数
   final void Function(TaobaoPageController controller, dynamic data) onUserLogon;
 
   TaobaoPage({
@@ -43,53 +39,63 @@ class _TaobaoPageState extends State<TaobaoPage> with AutomaticKeepAliveClientMi
   @override
   bool get wantKeepAlive => true;
 
-  // 控制器用于控制
   TaobaoPageController _controller;
 
   List<Page> _pages = [];
 
-  int _index = 0; // 当前显示页
+  int _index = 0; // current display webview
 
-  // 只要登录页面开始加载那就显示webview
-  bool _loginPage = false;
+  // if we have any login apge
+  bool _hasLoginPage = false;
 
-  // myhome出现即可认为是登录成功
-  bool _isLogon = false; // TODO: 调试都是登录
+  // we have logn success
+  bool _isLogon = false;
 
   bool _debug = false;
 
-  // TODO: 是否显示webview，可以有多个参数合成：readdy, debug等
-  bool get _showWebview => _debug || _loginPage;
+  // TODO: display webview or not, can be with more params：readdy, debug etc.
+  bool get _showWebview => _debug || _hasLoginPage;
 
   @override
   void initState() {
     super.initState();
 
-    _controller = TaobaoPageController._(this);
-    // 初始化状态
+    initAsync();
+  }
 
+  initAsync() async {
+    _controller = TaobaoPageController._(this);
+
+    // we need to subscribe event in this function
     widget.onCreated?.call(_controller);
 
-    // 添加默认的登录页面: code 为空,
-    // 加载完成是显示登录页面,显示登录页面
-    _controller.openPage(
+    // first create a login page for all state.
+    Page _homepage;
+    _homepage = await _controller.openPage(
       H5PageUrls.login,
       onLoadStop: (controller, url) {
-        if (H5PageUrls.isHome(url)) {
-          print("应该登录成功 ====> $url");
+        if (H5PageUrls.isLogin(url)) {
+          // has login page
+          print("[taobao page] has login page");
+          _controller.emit(EventHasLoginPage(_homepage, url));
+          setState(() => _hasLoginPage = true);
+        } else {
+          if (_hasLoginPage) setState(() => _hasLoginPage = false);
+        }
 
-          // TODO: android 没法确认通过一下方式登录
+        if (H5PageUrls.isHome(url)) {
+          print("[taobao page] guess we have login success => $url");
+          // TODO: trick, in some low version android, we can't check use h5api
           setState(() {
             _isLogon = true;
           });
-          // 查询帐号信息的数据, 判断是否登录成功
+          // check if we have logon success
           _controller.h5api.userProfile(check: true).then((value) {
-            // TODO: 通知所有页面刷新
-            setState(() {
-              _isLogon = true;
-            });
+            // TODO: notify all page we have logon success
+            _controller.emit(EventUserLogon(_homepage, value));
+            setState(() => _isLogon = true );
             widget.onUserLogon?.call(_controller, value);
-            print("确认登录成功 => $value");
+            print("[taobao page] confirm we have login success");
           });
         }
       },
@@ -112,46 +118,63 @@ class _TaobaoPageState extends State<TaobaoPage> with AutomaticKeepAliveClientMi
     );
   }
 
-  void _setLoginPage(int index) {
-    setState(() {
-      _index = index;
-      _loginPage = true;
-    });
-  }
-
   void _addPage(Page page) {
     setState(() {
       _pages.add(page);
     });
   }
+
+  void _setDebug(bool v) {
+    setState(() => _debug = v);
+  }
 }
 
-// 控制器: 暴露页面控制
 class TaobaoPageController {
 
   _TaobaoPageState _state;
 
-  // 执行淘宝执行代码
+  EventBus _eventBus;
+
   PCWeb pcweb;
   H5API h5api;
 
   TaobaoPageController._(
     this._state,
   ) {
-    // TODO: 启动定时器，清理不活跃的 page
+
+    _eventBus = EventBus();
+
+    // TODO: start timer to clean inactive page
     pcweb = PCWeb(this);
     h5api = H5API(this);
   }
 
-  // pages
+  // pages return pages we have
   List<Page> get pages => _state._pages;
+
+  // debug
+  bool get isDebug => _state._debug;
+
+  // subscribe event, add filter with field
+  Stream<T> on<T>() {
+    return _eventBus.on<T>();
+  }
+
+  // emit event
+  void emit(event) {
+    _eventBus.fire(event);
+  }
+
+  void setDebug(bool v) {
+    _state._setDebug(v);
+  }
 
   Future<dynamic> doAction(ActionJob action) async {
     
-    // 检查是否登录
+    // check if we are already login
     if (!_state._isLogon && !action.noLogin) return Future.error("not account login");
 
-    // 提高效率 使用 hash
+    // TODO: optmize, use hashmap
     int _index;
     for (var i=0; i<_state._pages.length; i++) {
       if (_state._pages[i].match(action.url)) {
@@ -159,10 +182,12 @@ class TaobaoPageController {
         break;
       }
     }
-    // 找到页面直接去执行
+
+    // if we found matched page, just do action
+    // TODO: check pages overload, try another page
     if (_index != null) return _state._pages[_index].doAction(action);
 
-    // 打开新页面来执行
+    // open a new page to do this action
     return openPage(action.url).then((Page page) {
       return page.doAction(action);
     });
@@ -180,44 +205,49 @@ class TaobaoPageController {
 
     // if (H5PageUrls.isLogin(url)) return Future.error("don't allow open login page");
 
-    // TODO: 复用已经没有任务的页面，除非 keepalive
+    // TODO: reuse page with empty job queue, except which has keepalive
 
     if (_state._pages.length>_state.widget.maxTab) {
-      // 如果大于maxTab？
+      // TODO: make a page can be turn to a new one
       return Future.error("max tab ${_state.widget.maxTab}");
     }
 
+    // get the new page's index
     final _len = _state._pages.length;
 
-    final page = Page(
-      url,
-      onWebViewCreated: onCreated,
-      onLoadStart: onLoadStart,
-      onLoadStop: (controller, url) {
-        onLoadStop?.call(controller, url);
-        _checkIsLoginPage(_len, controller, url);
+    // event filter page with id
+
+    // init the new page
+    Page page;
+    page = Page(
+      _len, url,
+      onWebViewCreated: (controller) {
+        emit(EventPageCreated(page));
+        onCreated?.call(controller);
       },
-      onLoadError: onLoadError,
+      onLoadStart: (controller, url) {
+        emit(EventPageLoadStart(page, url));
+        onLoadStart?.call(controller, url);
+      },
+      onLoadStop: (controller, url) {
+        emit(EventPageLoadStop(page, url));
+        onLoadStop?.call(controller, url);
+      },
+      onLoadError: (controller, url, code, message) {
+        emit(EventPageLoadError(page, url, code, message));
+        onLoadError?.call(controller, url, code, message);
+      },
     );
 
-    print("打开第 ${_len+1} 个标签");
+    print("[controller] open the ${_len+1} page");
 
-    // 初始化
-    // TODO: 初始化返回状态
-    // page.init();
+    // TODO: handle load page error, this page need be destroy
 
-    // TODO: 加载失败怎么算?
     _state._addPage(page);
 
     return Future.value(page);
   }
 
-  // 判断是否存在登录页面
-  void _checkIsLoginPage(int index, InAppWebViewController controller, String url) {
-    if (H5PageUrls.isLogin(url)) {
-      print("是登录页面需要显示 => webview");
-      // 设置存在登录页面
-      _state._setLoginPage(index);
-    }
+  Future<dynamic> checkUserLogin() {
   }
 }

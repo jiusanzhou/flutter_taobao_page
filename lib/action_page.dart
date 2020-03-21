@@ -8,62 +8,39 @@ import 'package:flutter_taobao_page/utils.dart';
 import 'package:flutter_taobao_page/webview.dart';
 
 class ActionJob {
-
-  // vid 设置action id
   String vid;
-
-  // url规则,用于筛选执行code的page, 如果未匹配到则打开新标签
   String url;
-
-  // code,即为执行的代码
   String code;
 
-  // 可以在未登录情况下调用
+  // allow execute with login
   bool noLogin;
 
-  // 绑定用于执行的page
+  // bind page for this action
   // Page page; , @required this.page
 
-  // 初始化动作
   ActionJob(this.url, { this.code, this.noLogin: false });
 }
 
-
-// 需要打开渲染的页面配置
-// 打开的页面,包含等
-// 需要需要改成 widget?
 class Page {
 
   // TODO: auto load scripts
 
-  // 当前页面的链接地址
+  int id;
+
   String _url;
 
   String _normalizeUrl;
 
-  // 永久的页面不被复用也不被回收
   bool keepalive;
 
-  // 执行的任务队列
   final Queue<ActionJob> _actionsQueue = Queue<ActionJob>();
-
-  // 暂停任务队列的执行
   bool _queuePaused = true;
   
-  // 执行结果的等待feature
   final Map<String, Completer> _waitCompleters = {};
 
-  // 任务队列执行频率
   Duration _actInterval = const Duration(microseconds: 100);
 
-  // 任务执行 timre
   Timer _actTimer;
-
-  // 插入额外脚本
-
-  // page 需不需要被销毁???
-
-  // 出现任意验证码就可以stop the world
 
   ///Event fired when the [InAppWebView] is created.
   final void Function(InAppWebViewController controller) onWebViewCreated;
@@ -79,39 +56,35 @@ class Page {
   final void Function(InAppWebViewController controller, String url, int code,
       String message) onLoadError;
 
-  // webview 视图
   Widget webview;
 
-  // webview 控制器
   InAppWebViewController webviewController;
 
-  // 用于清理，上次活动时间
+  // page last action for cleaner
   DateTime lastActive;
 
+  // TOOD: with android low version
   bool _missES6 = Platform.isAndroid;
 
   Page(
+    this.id,
     this._url,
     {
       this.onWebViewCreated,
       this.onLoadStart,
       this.onLoadStop,
       this.onLoadError,
-
       this.keepalive: false,
     }
   ) {
     init();
   }
 
-  // init 初始化
   init() {
-
-    // 初始化URL
     _setUrl(_url);
-    print("初始化一个新页面: $_url");
+    print("[action page] init a new page => $_url");
 
-    // 初始化webview
+    // create a webview widget
     webview = TaobaoWebview(
       initialUrl: _url,
       onWebViewCreated: _onWebViewCreated,
@@ -120,45 +93,44 @@ class Page {
       onLoadError: _onLoadError,
     );
 
-    // 启动任务执行器
+    // start a routine to execute
     _actTimer = Timer.periodic(_actInterval, (timer) {
       _runAction();
     });
   }
 
-  // 主动调用销毁
+  // manual destroy this page
   Future<bool> destroy() {
     _actTimer.cancel();
     return Future.value(true);
   }
 
-  // 匹配当前url是否合适
+  // match current url
   bool match(String _url) {
     return _url == _normalizeUrl;
   }
 
-  // 执行动作
+  // run action
   Future<dynamic> doAction(ActionJob action, {Duration timeout: const Duration(seconds: 60)}) {
 
-    // 判断是否要执行代码，不执行代码生成 action 扔进来干嘛?
+    // if with code to execute just return
     if (action.code == null) return Future.value(null);
 
-    // 生成 js 执行 vid
-    String vid = "callback_${Utils.randomString()}";
+    // generate a id
+    String vid = "callback_${Helper.randomString()}";
 
     action.vid = vid;
   
-    // 生成 feature
+    // new a future
     _waitCompleters[vid] = Completer();
 
-    // 不立即去执行代码，扔到队列去: _runJS(vid, action.code);
     _actionsQueue.add(action);
 
-    // 返回超时future
+    // with timeout future
     return _waitCompleters[vid].future.timeout(timeout, onTimeout: () {
       // remove completer
       _waitCompleters.remove(vid);
-      return Future.error("timeout: $timeout");
+      return Future.error("[action] timeout: $timeout");
     });
   }
 
@@ -167,14 +139,13 @@ class Page {
     _normalizeUrl = url.split("?")[0];
   }
 
-  // 接收js从返回的数据: 这里比需要返回字符串，inapp有bug
+  // receive data from js, need to return string, inapp has' bug
   dynamic _onJsResultHandler(List<dynamic> args) {
-    // 长度需要为3
+    // NOTE: we need 3 arguments
     if (args.length != 3) return "";
 
-    // 判断返回正常还是错误: vid, data, error
     Completer c = _waitCompleters.remove(args[0]);
-    if ( c == null ) return Future.error("unregister action id: ${args[0]}");
+    if ( c == null ) return Future.error("[action page] unregister action id: ${args[0]}");
     args[2] == null ? c.complete(args[1]) : c.completeError(args[2]);
     return "";
   }
@@ -187,12 +158,10 @@ class Page {
     }
   }
 
-  // 运行 js, 这里不直接返回结果，全部走 js_result
+  // all result need to use channel
   void _runJS(String vid, String code) {
     // 
-    // 拼装最终执行的 js 代码
-    //
-    // 判断结果是否是 promise: typeof subject.then == 'function' 这个做法不够严谨但在这里够用
+    // check if type is promise: typeof subject.then == 'function'
     //
     // let callback = (data) => flutter_inappwebview.callHandler('js_result', vid, data);
     // let res = code;
@@ -201,10 +170,9 @@ class Page {
     // (()=>{})()
     //
 
-    // 一种是直接在这里返回就可以了
-
-    // Android 部分低版本 不支持 es6： 箭头函数，let等???
-    // 不过promise 装了polyfill
+    // some lower android don't supported es6
+    // but the inappwebview has inject polyfill for promise
+    // NOTE: try not to use arrow function and `let`.
 
     // (()=>{})(), return, res,
     String vcode = """(function() {
@@ -214,7 +182,7 @@ class Page {
       ${code.indexOf("return")<0?"return "+code:code}
     })();
     if (typeof res.then !== 'function') {
-      callback({data: res});
+      callback(res);
     } else {
       res.then(function(r) {callback(r)}).catch(function(e) {callback(null, e)});
     }
@@ -231,28 +199,23 @@ class Page {
     // vcode = "typeof Array.from";
     // print("$vcode");
 
-
     webviewController.evaluateJavascript(source: vcode).then((value) {
-      // print("evaluate result => $value");
+      // TODO: some value we just call _callHandler?
+      // print("[action js] evalute result => $value");
     }).catchError((e) {
-      print("evaluate error => $e");
+      print("[action js] evaluate error => $e");
     });
   }
 
-  // 从任务队列去任务并执行
   void _runAction() {
-    // 判断是否暂停
     if (_queuePaused) return;
-    // 判断是否为空
     if (_actionsQueue.isEmpty) return;
     // FIFO
     ActionJob act = _actionsQueue.removeFirst();
-    // 执行代码
     _runJS(act.vid, act.code);
   }
 
   void _onWebViewCreated(InAppWebViewController controller) {
-    // 暂停队列
     _queuePaused = true;
 
     webviewController = controller;
@@ -261,7 +224,6 @@ class Page {
   }
 
   _onLoadStart(InAppWebViewController controller, String url) {
-    // 暂停队列
     _queuePaused = true;
 
     if (_missES6) controller.evaluateJavascript(source: """if (!Array.from) {
@@ -272,7 +234,6 @@ class Page {
   }
 
   _onLoadStop(InAppWebViewController controller, String url) {
-    // 启动队列
     _queuePaused = false;
 
     _setUrl(url);
@@ -281,7 +242,7 @@ class Page {
   }
 
   _onLoadError(InAppWebViewController controller, String url, int code, String message) {
-    print("加载错误 => $url, $message");
+    print("[action page] load page error => $url, $message");
     onLoadError?.call(controller, url, code, message);
   }
 }

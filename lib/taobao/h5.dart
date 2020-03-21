@@ -8,11 +8,15 @@ class H5API {
   H5API(this.controller);
 
   Future<dynamic> userProfile({bool check}) {
-    return controller.doAction(ActionJob(H5PageUrls.home, code: H5APICode.userProfile(), noLogin: check));
+    return controller.doAction(ActionJob(H5PageUrls.mhome, code: H5APICode.userProfile(), noLogin: check));
   }
 
   Future<dynamic> orderDetail(String orderId) {
-    return controller.doAction(ActionJob(H5PageUrls.home, code: H5APICode.orderDetail(orderId)));
+    return controller.doAction(ActionJob(H5PageUrls.mhome, code: H5APICode.orderDetail(orderId)));
+  }
+
+  Future<dynamic> logisDetail(String orderId) {
+    return controller.doAction(ActionJob(H5PageUrls.mhome, code: H5APICode.logisDetail(orderId)));
   }
 }
 
@@ -28,6 +32,15 @@ class H5APICode {
       appName:'tborder',
       bizOrderId:'$orderId'
     }""");
+  }
+
+  // 物流详情
+  static String logisDetail(String orderId) {
+    return _basicRequest(
+      "mtop.cnwireless.cnlogisticdetailservice.querylogisdetailbytradeid",
+      "v1.0", """{
+        orderId: '$orderId',
+      }""");
   }
 
   static String _basicRequest(String api, String ver, String data) {
