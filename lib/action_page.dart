@@ -21,17 +21,38 @@ class ActionJob {
   ActionJob(this.url, { this.code, this.noLogin: false });
 }
 
+class PageOptions {
+
+  bool keepalive;
+
+  bool visible;
+
+  String title;
+
+  int max;
+
+  PageOptions({
+    this.keepalive: false,
+    this.visible: false,
+    this.title,
+    this.max: 1,
+  });
+}
+
 class Page {
 
   // TODO: auto load scripts
 
   int id;
 
+  int groupId;
+  int stackId;
+
+  PageOptions options;
+
   String _url;
 
   String _normalizeUrl;
-
-  bool keepalive;
 
   final Queue<ActionJob> _actionsQueue = Queue<ActionJob>();
   bool _queuePaused = true;
@@ -74,7 +95,7 @@ class Page {
       this.onLoadStart,
       this.onLoadStop,
       this.onLoadError,
-      this.keepalive: false,
+      this.options,
     }
   ) {
     init();

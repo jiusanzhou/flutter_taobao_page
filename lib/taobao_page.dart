@@ -14,8 +14,6 @@ class TaobaoPage extends StatefulWidget {
 
   final int maxTab;
 
-  final ViewMode mode;
-
   final Widget child;
 
   final void Function(TaobaoPageController controller) onCreated;
@@ -25,7 +23,6 @@ class TaobaoPage extends StatefulWidget {
   TaobaoPage({
     @required this.child,
     this.maxTab: 20,
-    this.mode: ViewMode.stack,
     this.onCreated,
     this.onUserLogon,
   });
@@ -34,16 +31,18 @@ class TaobaoPage extends StatefulWidget {
   _TaobaoPageState createState() => _TaobaoPageState();
 }
 
-class _TaobaoPageState extends State<TaobaoPage> with AutomaticKeepAliveClientMixin<TaobaoPage> {
+class _TaobaoPageState extends State<TaobaoPage>
+  with TickerProviderStateMixin<TaobaoPage>, AutomaticKeepAliveClientMixin<TaobaoPage> {
 
   @override
   bool get wantKeepAlive => true;
 
   TaobaoPageController _controller;
 
-  List<Page> _pages = [];
+  TabController _tabController;
 
-  int _index = 0; // current display webview
+  List<Page> _pages = [];
+  List<List<Page>> _pageGroups = [];
 
   // if we have any login apge
   bool _hasLoginPage = false;
@@ -52,6 +51,11 @@ class _TaobaoPageState extends State<TaobaoPage> with AutomaticKeepAliveClientMi
   bool _isLogon = false;
 
   bool _debug = false;
+
+  bool _scrollable = false;
+
+  int _tabIndex = 0; // 当前显示的 index
+  int _stackIndex = 0; // 当前显示栈 index
 
   // TODO: display webview or not, can be with more params：readdy, debug etc.
   bool get _showWebview => _debug || _hasLoginPage;
@@ -63,6 +67,12 @@ class _TaobaoPageState extends State<TaobaoPage> with AutomaticKeepAliveClientMi
     initAsync();
   }
 
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
   initAsync() async {
     _controller = TaobaoPageController._(this);
 
@@ -72,7 +82,11 @@ class _TaobaoPageState extends State<TaobaoPage> with AutomaticKeepAliveClientMi
     // first create a login page for all state.
     Page _homepage;
     _homepage = await _controller.openPage(
-      H5PageUrls.login,
+      H5PageUrls.mhome,
+      options: PageOptions(
+        keepalive: true,
+        visible: true,
+      ),
       onLoadStop: (controller, url) {
         if (H5PageUrls.isLogin(url)) {
           // has login page
@@ -84,6 +98,7 @@ class _TaobaoPageState extends State<TaobaoPage> with AutomaticKeepAliveClientMi
         }
 
         if (H5PageUrls.isHome(url)) {
+          // set the page's url to be home page???
           print("[taobao page] guess we have login success => $url");
           // TODO: trick, in some low version android, we can't check use h5api
           setState(() {
@@ -102,17 +117,49 @@ class _TaobaoPageState extends State<TaobaoPage> with AutomaticKeepAliveClientMi
     );
   }
 
+  // groups
+  List<List<Page>> _buildPageGroups(BuildContext context) {
+    List<List<Page>> tabs = [];
+    List<Page> _tmp = [];
+    int _idx = 0; // TODO: more customize, now always be the first one.
+    _pages.forEach((p) {
+      p.options.visible?tabs.add([p]):tabs[_idx]==null?_tmp.add(p):tabs[_idx].add(p);
+    });
+    tabs[_idx]==null?tabs.add(_tmp):tabs[_idx].addAll(_tmp);
+
+    // set group id and stack id
+    tabs.asMap().forEach((_grpid, element) {
+      element.asMap().forEach((_stkid, value) {
+        value.groupId = _grpid;
+        value.stackId = _stkid;
+      });
+    });
+
+    // update the _tab controller
+    // _tabController?.dispose();
+    if (_tabController == null || tabs.length != _tabController.length) {
+      _tabController = TabController(initialIndex: tabs.length-1, length: tabs.length, vsync: this);
+      _controller.emit(EventTabControllerUpdate(_tabController));
+    }
+
+    return tabs;
+  }
+
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    // rebuild pages, TODO: remove not nece
+    _pageGroups = _buildPageGroups(context);
     return IndexedStack(
       index: _showWebview?1:0,
       children: <Widget>[
         widget.child,
         TaobaoPageView(
-          mode: widget.mode,
-          index: _index,
-          children: List.generate(min(widget.maxTab, _pages.length), (index) => _pages[index].webview)
+          scrollable: _scrollable,
+          stackIndex: _stackIndex,
+          groupedPages: _pageGroups,
+          tabController: _controller.tabController,
+          // children: List.generate(min(widget.maxTab, _pages.length), (index) => _pages[index])
         ),
       ],
     );
@@ -126,6 +173,17 @@ class _TaobaoPageState extends State<TaobaoPage> with AutomaticKeepAliveClientMi
 
   void _setDebug(bool v) {
     setState(() => _debug = v);
+  }
+
+  void _setScrollable(bool v) {
+    setState(() => _scrollable = v);
+  }
+
+  void _changePage(Page page) {
+    setState(() {
+      _tabController.animateTo(page.groupId);
+      _stackIndex = page.stackId;
+    });
   }
 }
 
@@ -152,6 +210,11 @@ class TaobaoPageController {
   // pages return pages we have
   List<Page> get pages => _state._pages;
 
+  // grooups pages
+  List<List<Page>> get pageGroups => _state._pageGroups;
+
+  TabController get tabController => _state._tabController;
+
   // debug
   bool get isDebug => _state._debug;
 
@@ -169,26 +232,23 @@ class TaobaoPageController {
     _state._setDebug(v);
   }
 
+  void setScrollable(bool v) {
+    _state._setScrollable(v);
+  }
+
   Future<dynamic> doAction(ActionJob action) async {
     
     // check if we are already login
     if (!_state._isLogon && !action.noLogin) return Future.error("not account login");
 
-    // TODO: optmize, use hashmap
-    int _index;
-    for (var i=0; i<_state._pages.length; i++) {
-      if (_state._pages[i].match(action.url)) {
-        _index = i;
-        break;
-      }
-    }
-
+    // find match
+    Page curp = _state._pages.firstWhere((p) => p.match(action.url), orElse: () => null);
     // if we found matched page, just do action
     // TODO: check pages overload, try another page
-    if (_index != null) return _state._pages[_index].doAction(action);
+    if (curp != null) return curp.doAction(action);
 
     // open a new page to do this action
-    return openPage(action.url).then((Page page) {
+    return openPage(action.url, options: PageOptions()).then((Page page) {
       return page.doAction(action);
     });
   }
@@ -200,6 +260,7 @@ class TaobaoPageController {
       LoadStartCallback onLoadStart,
       LoadStopCallback onLoadStop,
       LoadErrorCallback onLoadError,
+      PageOptions options,
     }
   ) {
 
@@ -210,6 +271,14 @@ class TaobaoPageController {
     if (_state._pages.length>_state.widget.maxTab) {
       // TODO: make a page can be turn to a new one
       return Future.error("max tab ${_state.widget.maxTab}");
+    }
+
+    if (options.max > 0) {
+      List<Page> ps = _state._pages.where((p) => p.match(url)).toList();
+      if (ps.length >= options.max) {
+        // TODO: get the random page
+        return Future.value(ps[0]);
+      }
     }
 
     // get the new page's index
@@ -237,6 +306,7 @@ class TaobaoPageController {
         emit(EventPageLoadError(page, url, code, message));
         onLoadError?.call(controller, url, code, message);
       },
+      options: options,
     );
 
     print("[controller] open the ${_len+1} page");
@@ -248,6 +318,17 @@ class TaobaoPageController {
     return Future.value(page);
   }
 
-  Future<dynamic> checkUserLogin() {
+  // show special page
+  void showPage(Page page) {
+    // set with tab index and stack index
+    // for now just auto display with our hook
+    _state._changePage(page);
+  }
+
+  // show special page with url
+  void showPageWithUrl(String url) {
+    Page page = _state._pages.firstWhere((element) => element.match(url), orElse: () => null);
+    if (page!=null) return showPage(page);
+    print("can't found page with url: $url, maybe you should open it first.");
   }
 }

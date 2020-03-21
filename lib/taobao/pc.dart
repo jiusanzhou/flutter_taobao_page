@@ -6,36 +6,45 @@ class PCWeb {
 
   PCWeb(this.controller);
 
+  static ActionJob userBaseInfoAction = ActionJob(PCPageUrls.userBaseInfo, code: PCCode.userBaseInfo());
+  static ActionJob accountProfileAction = ActionJob(PCPageUrls.accountProfile, code: PCCode.accountProfile());
+  static ActionJob accountSecurityAction = ActionJob(PCPageUrls.accountSecurity, code: PCCode.accountSecurity());
+  static ActionJob rateScoreAction = ActionJob(PCPageUrls.rateScore, code: PCCode.rateScore());
+  static ActionJob certityInfoAction = ActionJob(PCPageUrls.certityInfo, code: PCCode.certityInfo());
+  static ActionJob vipScoreAction = ActionJob(PCPageUrls.vipScore, code: PCCode.vipScore());
+  static ActionJob aliStarAction = ActionJob(PCPageUrls.aliStar, code: PCCode.aliStar());
+  static ActionJob disputeAction = ActionJob(PCPageUrls.dispute, code: PCCode.dispute());
+
   Future<dynamic> userBaseInfo() {
-    return controller.doAction(ActionJob(PCPageUrls.userBaseInfo, code: PCCode.userBaseInfo()));
+    return controller.doAction(userBaseInfoAction);
   }
 
   Future<dynamic> accountProfile() {
-    return controller.doAction(ActionJob(PCPageUrls.accountProfile, code: PCCode.accountProfile()));
+    return controller.doAction(accountProfileAction);
   }
 
   Future<dynamic> accountSecurity() {
-    return controller.doAction(ActionJob(PCPageUrls.accountSecurity, code: PCCode.accountSecurity()));
+    return controller.doAction(accountSecurityAction);
   }
 
   Future<dynamic> certityInfo() {
-    return controller.doAction(ActionJob(PCPageUrls.certityInfo, code: PCCode.certityInfo()));
+    return controller.doAction(certityInfoAction);
   }
 
   Future<dynamic> vipScore() {
-    return controller.doAction(ActionJob(PCPageUrls.vipScore, code: PCCode.vipScore()));
+    return controller.doAction(vipScoreAction);
   }
 
   Future<dynamic> rateScore() {
-    return controller.doAction(ActionJob(PCPageUrls.rateScore, code: PCCode.rateScore()));
+    return controller.doAction(rateScoreAction);
   }
 
   Future<dynamic> aliStar() {
-    return controller.doAction(ActionJob(PCPageUrls.aliStar, code: PCCode.aliStar()));
+    return controller.doAction(aliStarAction);
   }
 
   Future<dynamic> dispute() {
-    return controller.doAction(ActionJob(PCPageUrls.dispute, code: PCCode.dispute()));
+    return controller.doAction(disputeAction);
   }
 
   Future<dynamic> order(int page, {int count = 20, String type = ""}) {
@@ -126,7 +135,7 @@ return data
 
   /// 退款管理
   static String dispute() {
-    return """var keys = Object.keys(disputeData.data||{}).filter(function(i) {return i.indexOf('disputeListGrid') === 0});
+    return """${resetViewPort()};var keys = Object.keys(disputeData.data||{}).filter(function(i) {return i.indexOf('disputeListGrid') === 0});
 return { orders: keys.map(function(i) {return disputeData.data[i]}) }
 """;
   }
@@ -154,6 +163,11 @@ r.open(
 r.send();
 return r.status === 200 ? JSON.parse(r.responseText) : null
 """;
+  }
+
+  static String resetViewPort() {
+    return """var _meta = document.querySelector('head > meta[name=viewport]')
+if ( _meta ) _meta.setAttribute('content', '');""";
   }
 }
 

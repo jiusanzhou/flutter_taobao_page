@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_taobao_page/action_page.dart';
 
 // define taobao page event
@@ -43,4 +44,10 @@ class EventUserLogon {
   dynamic data;
 
   EventUserLogon(this.page, this.data);
+}
+
+class EventTabControllerUpdate {
+  TabController tabController;
+
+  EventTabControllerUpdate(this.tabController);
 }

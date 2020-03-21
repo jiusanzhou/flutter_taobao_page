@@ -36,7 +36,10 @@ class TaobaoWebview extends StatefulWidget {
   _TaobaoWebviewState createState() => _TaobaoWebviewState();
 }
 
-class _TaobaoWebviewState extends State<TaobaoWebview> {
+class _TaobaoWebviewState extends State<TaobaoWebview> with AutomaticKeepAliveClientMixin<TaobaoWebview> {
+
+  @override
+  bool get wantKeepAlive => true;
 
   void _onWebViewCreated(InAppWebViewController controller) {
 

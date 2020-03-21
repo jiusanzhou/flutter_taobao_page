@@ -12,11 +12,11 @@ class H5API {
   }
 
   Future<dynamic> orderDetail(String orderId) {
-    return controller.doAction(ActionJob(H5PageUrls.mhome, code: H5APICode.orderDetail(orderId)));
+    return controller.doAction(ActionJob(H5PageUrls.home, code: H5APICode.orderDetail(orderId)));
   }
 
   Future<dynamic> logisDetail(String orderId) {
-    return controller.doAction(ActionJob(H5PageUrls.mhome, code: H5APICode.logisDetail(orderId)));
+    return controller.doAction(ActionJob(H5PageUrls.home, code: H5APICode.logisDetail(orderId)));
   }
 }
 

@@ -1,15 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_taobao_page/action_page.dart';
 
 class TaobaoPageView extends StatefulWidget {
 
-  final ViewMode mode; // 显示模式
-  final int index; // 当前显示的 index
-  final List<Widget> children; // 
+  final int stackIndex; // 当前显示栈 index
+  // final List<Page> children; // 
+  final bool scrollable;
+  final Widget title;
+  final TabController tabController;
+
+  final List<List<Page>> groupedPages;
 
   TaobaoPageView({
-    this.mode,
-    this.children,
-    this.index
+    // this.children,
+    this.groupedPages,
+    this.stackIndex,
+    this.scrollable: true,
+    this.title: const Text("淘宝数据"),
+    this.tabController,
   });
 
   @override
@@ -18,51 +26,71 @@ class TaobaoPageView extends StatefulWidget {
 
 class _TaobaoPageViewState extends State<TaobaoPageView> {
 
-  ViewMode _mode; // 显示模式
-  int _index; // 当前显示的 index
-
   @override
   void initState() {
     super.initState();
-
-    _mode = widget.mode;
-    _index = widget.index;
   }
 
   @override
   Widget build(BuildContext context) {
-    switch (_mode) {
-    case ViewMode.stack:
-      return buildStack(context);
-    case ViewMode.tabview:
-      return buildTabview(context);
-    default:
-      return buildUnknown(context);
-    }
+    // build tabs with page groups, if only one maybe we just render with stack?
+    // final _grps = _buildPageGroups(context);
+
+    // if (_grps.length==0) return Container(child: Text("no pages")); 
+    // if (_grps.length==1) return _buildStack(context, _grps[0]);
+
+    final _grps = widget.groupedPages;
+
+    return TabBarView(
+      controller: widget.tabController,
+      physics: widget.scrollable?const AlwaysScrollableScrollPhysics():const NeverScrollableScrollPhysics(),
+      children: List.generate(_grps.length, (index) => _buildStack(context, _grps[index])),
+    );
+
+    // build tabs
+    // return DefaultTabController(
+    //   length: _grps.length,
+    //   initialIndex: widget.tabIndex, // alway make sure each tab rendered
+    //   // how to add title
+    //   child: Scaffold(
+    //     appBar: AppBar(
+    //       automaticallyImplyLeading: false,
+    //       title: TabBar(
+    //         tabs: List.generate(_grps.length, (index) => Tab(text: _grps[index][0].options.title??"-")),
+    //       ),
+    //     ),
+    //     body: TabBarView(
+    //       physics: widget.scrollable?const AlwaysScrollableScrollPhysics():const NeverScrollableScrollPhysics(),
+    //       children: List.generate(_grps.length, (index) => _buildStack(context, _grps[index])),
+    //     ),
+    //   ),
+    // );
   }
 
-  Widget buildStack(BuildContext context) {
+  // TDO: more custommize
+  // List<List<Page>> _buildPageGroups(BuildContext context) {
+  //   List<List<Page>> tabs = [];
+  //   List<Page> _tmp = [];
+  //   int _idx = 0; // TODO: more customize, now always be the first one.
+  //   widget.children.forEach((p) {
+  //     p.options.visible?tabs.add([p]):tabs[_idx]==null?_tmp.add(p):tabs[_idx].add(p);
+  //   });
+  //   tabs[_idx]==null?tabs.add(_tmp):tabs[_idx].addAll(_tmp);
+  //   return tabs;
+  // }
+
+  // [ 0 ]
+  // [ 1 ]
+  // [ 2 ]
+  // [ 3 ]
+
+  // [ 0 ] [ 1 ] [ 2 ] [ 3 ]
+  // [ 4 ] [ 5 ] [ 6 ] [ 7 ]
+  // [ 8 ] [ 9 ]
+  Widget _buildStack(BuildContext context, List<Page> pages) {
     return IndexedStack(
-      index: _index,
-      children: widget.children,
+      index: widget.stackIndex,
+      children: List.generate(pages.length, (index) => pages[index].webview),
     );
   }
-
-  Widget buildTabview(BuildContext context) {
-    return buildUnknown(context);
-  }
-
-  Widget buildUnknown(BuildContext context) {
-    return Center(
-        child: Container(
-          child: Text("unimplement view mode $_mode"),
-        ),
-      );
-  }
-}
-
-// 显示模式
-enum ViewMode {
-  stack,
-  tabview,
 }

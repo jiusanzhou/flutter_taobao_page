@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:example/home.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_taobao_page/event.dart';
 import 'package:flutter_taobao_page/hack.dart';
@@ -28,7 +29,7 @@ class MyApp extends StatelessWidget {
         primaryColor: Colors.blue,
         primarySwatch: Colors.blue,
       ),
-      home: MyHomePage(title: '淘宝数据 Demo'),
+      home: HomePage(title: '淘宝数据'),
     );
   }
 }
