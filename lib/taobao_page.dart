@@ -337,6 +337,7 @@ class TaobaoPageController {
       List<Page> ps = _state._pages.where((p) => p.match(url)).toList();
       if (ps.length >= options.max) {
         // TODO: get the random page
+        if (options.refresh) ps[0].webviewController.reload(); // TODO: should replace onHandler?
         return Future.value(ps[0]);
       }
     }

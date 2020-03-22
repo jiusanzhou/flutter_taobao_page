@@ -36,12 +36,16 @@ class PageOptions {
   // timeout for page load
   Duration timeout;
 
+  // refresh if exits
+  bool refresh;
+
   PageOptions({
     this.keepalive: false,
     this.visible: false,
     this.title,
     this.max: 1,
     this.timeout,
+    this.refresh: false,
   });
 }
 
