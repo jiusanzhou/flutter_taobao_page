@@ -273,7 +273,16 @@ class TaobaoPageController {
     _state._setScrollable(v);
   }
 
-  Future<dynamic> doAction(ActionJob action) async {
+  Future<dynamic> doAction(
+    ActionJob action,
+    {
+      CreatedCallback onCreated,
+      LoadStartCallback onLoadStart,
+      LoadStopCallback onLoadStop,
+      LoadErrorCallback onLoadError,
+      PageOptions options,
+    }
+  ) async {
     
     // check if we are already login
     if (!_state._isLogon && !action.noLogin) return Future.error("not account login");
@@ -285,7 +294,14 @@ class TaobaoPageController {
     if (curp != null) return curp.doAction(action);
 
     // open a new page to do this action
-    return openPage(action.url, options: PageOptions()).then((Page page) {
+    return openPage(
+      action.url,
+      options: PageOptions(),
+      onCreated: onCreated,
+      onLoadStart: onLoadStart,
+      onLoadStop: onLoadStop,
+      onLoadError: onLoadError,
+    ).then((Page page) {
       return page.doAction(action);
     });
   }

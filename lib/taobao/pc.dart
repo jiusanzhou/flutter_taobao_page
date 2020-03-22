@@ -48,7 +48,17 @@ class PCWeb {
   }
 
   Future<dynamic> order(int page, {int count = 20, String type = "", bool isAsync = false}) {
-    return controller.doAction(ActionJob(PCPageUrls.order, code: PCCode.order(page, count: count, type: type), isAsync: isAsync));
+    return controller.doAction(
+      ActionJob(PCPageUrls.order, code: PCCode.order(page, count: count, type: type), isAsync: isAsync),
+      onLoadStop: (controller, url) {
+        // check verify code
+        if (url.indexOf("_____tmd_____/verify") > 0) {
+          print("verify code, need to reload");
+          // just reload
+          controller.loadUrl(url: PCPageUrls.order);
+        }
+      },
+    );
   }
 }
 

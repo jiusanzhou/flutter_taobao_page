@@ -161,6 +161,7 @@ class Page {
 
   void _setUrl(String url) {
     _url = url;
+
     _normalizeUrl = url.split("?")[0];
   }
 
@@ -276,6 +277,8 @@ class Page {
 
   _onLoadStop(InAppWebViewController controller, String url) {
     _queuePaused = false;
+
+    print("[action page] stop load page => $url");
 
     _setUrl(url);
 
