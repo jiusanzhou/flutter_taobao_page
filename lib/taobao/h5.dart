@@ -7,8 +7,10 @@ class H5API {
 
   H5API(this.controller);
 
+  // check if we are logon page
+
   Future<dynamic> userProfile({bool check}) {
-    return controller.doAction(ActionJob(H5PageUrls.mhome, code: H5APICode.userProfile(), noLogin: check));
+    return controller.doAction(ActionJob(H5PageUrls.home, code: H5APICode.userProfile(), noLogin: check));
   }
 
   Future<dynamic> orderDetail(String orderId) {
@@ -57,7 +59,8 @@ class H5PageUrls {
   static String olist = "https://main.m.taobao.com/olist/index.html";
 
   static bool isLogin(String url) {
-    return url.split("?")[0] == login;
+    return url.indexOf("https://login.m.taobao.com") >= 0;
+    // return url.split("?")[0] == login;
   }
 
   static bool isHome(String url) {

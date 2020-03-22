@@ -54,7 +54,6 @@ class _TaobaoPageState extends State<TaobaoPage>
 
   bool _scrollable = false;
 
-  int _tabIndex = 0; // 当前显示的 index
   int _stackIndex = 0; // 当前显示栈 index
 
   // TODO: display webview or not, can be with more params：readdy, debug etc.
@@ -63,8 +62,11 @@ class _TaobaoPageState extends State<TaobaoPage>
   @override
   void initState() {
     super.initState();
-
-    initAsync();
+    // create controller once
+    _controller = TaobaoPageController._(this);
+    // we need to subscribe event in this function
+    widget.onCreated?.call(_controller);
+    _initAsync();
   }
 
   @override
@@ -73,45 +75,62 @@ class _TaobaoPageState extends State<TaobaoPage>
     super.dispose();
   }
 
-  initAsync() async {
-    _controller = TaobaoPageController._(this);
-
-    // we need to subscribe event in this function
-    widget.onCreated?.call(_controller);
+  _initAsync() async {
 
     // first create a login page for all state.
     Page _homepage;
     _homepage = await _controller.openPage(
-      H5PageUrls.mhome,
+      H5PageUrls.login, // what about we open login page directlly?
       options: PageOptions(
         keepalive: true,
         visible: true,
       ),
       onLoadStop: (controller, url) {
+        print("[login page] ====> $url");
+        // if we are login page, just set we are logon page
         if (H5PageUrls.isLogin(url)) {
           // has login page
           print("[taobao page] has login page");
           _controller.emit(EventHasLoginPage(_homepage, url));
           setState(() => _hasLoginPage = true);
-        } else {
-          if (_hasLoginPage) setState(() => _hasLoginPage = false);
+          return;
         }
 
-        if (H5PageUrls.isHome(url)) {
+        // otherwize just remoe sign
+        if (_hasLoginPage) setState(() => _hasLoginPage = false);
+
+        // if we are a home page, we need to check if we contains a login page.
+        if (!_hasLoginPage && H5PageUrls.isHome(url)) {
+          // evaluate right now, maybe not get data expect.
+          // because dom maight not ready from js
+          // controller.evaluateJavascript(source: H5APICode.containsLoginPage()).then((value) {
+          //   print(H5APICode.containsLoginPage());
+          //   print("is login page or not => $value");
+
+          //   // if we still contains logon page just od like above;
+          //   if (value) {
+          //     // has login page
+          //     print("[taobao page] contains login page iframe");
+          //     _controller.emit(EventHasLoginPage(_homepage, url));
+          //     setState(() => _hasLoginPage = true);
+          //     return;
+          //   }
+          // });
+
+          // otherwize check if we have logon
           // set the page's url to be home page???
           print("[taobao page] guess we have login success => $url");
           // TODO: trick, in some low version android, we can't check use h5api
-          setState(() {
-            _isLogon = true;
-          });
+          setState(() => _isLogon = true);
+          widget.onUserLogon?.call(_controller, null);
           // check if we have logon success
-          _controller.h5api.userProfile(check: true).then((value) {
-            // TODO: notify all page we have logon success
-            _controller.emit(EventUserLogon(_homepage, value));
-            setState(() => _isLogon = true );
-            widget.onUserLogon?.call(_controller, value);
-            print("[taobao page] confirm we have login success");
-          });
+          // _controller.h5api.userProfile(check: true).then((value) {
+          //   // TODO: notify all page we have logon success
+          //   _controller.emit(EventUserLogon(_homepage, value));
+          //   setState(() => _isLogon = true );
+          //   widget.onUserLogon?.call(_controller, value);
+          //   print("[taobao page] confirm we have login success");
+          // });
         }
       },
     );
@@ -184,6 +203,24 @@ class _TaobaoPageState extends State<TaobaoPage>
       _tabController.animateTo(page.groupId);
       _stackIndex = page.stackId;
     });
+  }
+
+  void _reset() {
+    // clean all state and call initAsync again
+    _hasLoginPage = false;
+    _isLogon = false;
+    _stackIndex = 0;
+
+    // romove alll pages;
+    _pages.forEach((p) {
+      // must destroy
+      p.destroy();
+    });
+
+    // clean it
+    _pages.clear();
+
+    _initAsync();
   }
 }
 
@@ -330,5 +367,10 @@ class TaobaoPageController {
     Page page = _state._pages.firstWhere((element) => element.match(url), orElse: () => null);
     if (page!=null) return showPage(page);
     print("can't found page with url: $url, maybe you should open it first.");
+  }
+
+  // clean and reset
+  void reset() {
+    _state._reset();
   }
 }

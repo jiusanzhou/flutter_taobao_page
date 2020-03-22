@@ -40,7 +40,7 @@ class _HomePageState extends State<HomePage> {
           children: <Widget>[
             Container(
               child: GestureDetector(
-                child: Text("${widget.title} - ${_controller?.pageGroups?.length??0}"),
+                child: Text("${widget.title} ${_controller?.pageGroups?.length??0}"),
                 onDoubleTap: () {
                   _controller.setDebug(!_controller.isDebug);
                 },
@@ -56,7 +56,7 @@ class _HomePageState extends State<HomePage> {
                     _controller.showPageWithUrl(_tabbar[idx][1]);
                   },
                   tabs: List.generate(_tabbar.length, (i) {
-                    return Tab(text: _tabbar[i][0]);
+                    return Tab(child: Text(_tabbar[i][0], style: TextStyle(fontSize: 11)));
                   }),
                 ),
               ),
@@ -123,61 +123,49 @@ class _HomePageState extends State<HomePage> {
     //   index += 1;
     // });
 
-    // _controller.pcweb.userBaseInfo().then((value) {
-    //   print("[1] user base info => $value");
-    // }).catchError((e) {
-    //   print("[error] use base unfo => $e");
-    // });
-
-    // _controller.pcweb.accountProfile().then((value) {
-    //   print("[2] account profile => $value");
-    // }).catchError((e) {
-    //   print("[error] account profile => $e");
-    // });
-
-    // _controller.pcweb.accountSecurity().then((value) {
-    //   print("[3] account security => $value");
-    // }).catchError((e) {
-    //   print("[error] account security => $e");
-    // });
-
-    // _controller.pcweb.certityInfo().then((value) {
-    //   print("[4] certityInfo => $value");
-    // }).catchError((e) {
-    //   print("[error] certityInfo => $e");
-    // });
-
-    // _controller.pcweb.aliStar().then((value) {
-    //   print("[5] aliStar => $value");
-    // }).catchError((e) {
-    //   print("[error] aliStar => $e");
-    // });
-
-    // _controller.pcweb.vipScore().then((value) {
-    //   print("[6] vipScore => $value");
-    // }).catchError((e) {
-    //   print("[error] vipScore => $e");
-    // });
-
-    // _controller.pcweb.rateScore().then((value) {
-    //   print("[7] rateScore => $value");
-    // }).catchError((e) {
-    //   print("[error] rateScore => $e");
-    // });
-
-    // 评价
-    openPage(PCPageUrls.rateScore, "评价", PCWeb.rateScoreAction).then((value) {
-      print("[7] dispute => $value");
+    _controller.pcweb.userBaseInfo().then((value) {
+      print("[1] user base info => $value");
+    }).catchError((e) {
+      print("[error] use base unfo => $e");
     });
 
-    // 退款管理
-    openPage(PCPageUrls.dispute, "退款管理", PCWeb.disputeAction).then((value) {
-      print("[8] dispute => $value");
+    _controller.pcweb.accountProfile().then((value) {
+      print("[2] account profile => $value");
+    }).catchError((e) {
+      print("[error] account profile => $e");
+    });
+
+    _controller.pcweb.accountSecurity().then((value) {
+      print("[3] account security => $value");
+    }).catchError((e) {
+      print("[error] account security => $e");
+    });
+
+    _controller.pcweb.certityInfo().then((value) {
+      print("[4] certityInfo => $value");
+    }).catchError((e) {
+      print("[error] certityInfo => $e");
+    });
+
+    _controller.pcweb.aliStar().then((value) {
+      print("[5] aliStar => $value");
+    }).catchError((e) {
+      print("[error] aliStar => $e");
+    });
+
+    _controller.pcweb.vipScore().then((value) {
+      print("[6] vipScore => $value");
+    }).catchError((e) {
+      print("[error] vipScore => $e");
+    });
+
+    _controller.pcweb.rateScore().then((value) {
+      print("[7] rateScore => $value");
+    }).catchError((e) {
+      print("[error] rateScore => $e");
     });
 
     // _controller.pcweb.dispute().then((value) {
-    //   print("[8] dispute => $value");
-    // }).catchError((e) {
     //   print("[error] dispute => $e");
     // });
 
@@ -188,7 +176,19 @@ class _HomePageState extends State<HomePage> {
     //   }).catchError((e) {
     //     print("[error] order => $e");
     //   });
+    // }); //   print("[8] dispute => $value");
+    // }).catchError((e) {
+   
+
+    // 评价
+    // openPage(PCPageUrls.rateScore, "评价", PCWeb.rateScoreAction).then((value) {
+    //   print("[7] dispute => $value");
     // });
+
+    // 退款管理
+    openPage(PCPageUrls.dispute, "退款管理", PCWeb.disputeAction).then((value) {
+      print("[8] dispute => $value");
+    });
   }
 
   Future<dynamic> openPage(String url, String title, ActionJob act) {

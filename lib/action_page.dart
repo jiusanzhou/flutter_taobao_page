@@ -123,6 +123,9 @@ class Page {
   // manual destroy this page
   Future<bool> destroy() {
     _actTimer.cancel();
+    
+    // clean others
+
     return Future.value(true);
   }
 
@@ -167,6 +170,7 @@ class Page {
 
     Completer c = _waitCompleters.remove(args[0]);
     if ( c == null ) return Future.error("[action page] unregister action id: ${args[0]}");
+    // error should return current page.
     args[2] == null ? c.complete(args[1]) : c.completeError(args[2]);
     return "";
   }

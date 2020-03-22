@@ -69,7 +69,15 @@ class _TaobaoWebviewState extends State<TaobaoWebview> with AutomaticKeepAliveCl
   Widget build(BuildContext context) {
     return InAppWebView(
       initialUrl: widget.initialUrl,
-      initialOptions: InAppWebViewWidgetOptions(inAppWebViewOptions: InAppWebViewOptions(javaScriptEnabled: true, debuggingEnabled: false)),
+      initialOptions: InAppWebViewWidgetOptions(
+        inAppWebViewOptions: InAppWebViewOptions(
+          javaScriptEnabled: true,
+          debuggingEnabled: false,
+        ),
+        androidInAppWebViewOptions: AndroidInAppWebViewOptions(
+          useWideViewPort: true,
+        ),
+      ),
       onWebViewCreated: _onWebViewCreated,
       onLoadStart: _onLoadStart,
       onLoadStop: _onLoadStop,
