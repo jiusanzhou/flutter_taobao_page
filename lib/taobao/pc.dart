@@ -53,7 +53,7 @@ class PCWeb {
       onLoadStop: (controller, url) {
         // check verify code
         if (url.indexOf("_____tmd_____/verify") > 0) {
-          print("verify code, need to reload");
+          print("[page taobao order] verify code, need to reload");
           // just reload
           controller.loadUrl(url: PCPageUrls.order);
         }

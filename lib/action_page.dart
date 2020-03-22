@@ -278,8 +278,6 @@ class Page {
   _onLoadStop(InAppWebViewController controller, String url) {
     _queuePaused = false;
 
-    print("[action page] stop load page => $url");
-
     _setUrl(url);
 
     onLoadStop?.call(controller, url);
