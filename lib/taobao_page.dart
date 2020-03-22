@@ -269,6 +269,10 @@ class TaobaoPageController {
     _state._setDebug(v);
   }
 
+  void showWebview(bool v) {
+    setDebug(v);
+  }
+
   void setScrollable(bool v) {
     _state._setScrollable(v);
   }
@@ -296,7 +300,7 @@ class TaobaoPageController {
     // open a new page to do this action
     return openPage(
       action.url,
-      options: PageOptions(),
+      options: options,
       onCreated: onCreated,
       onLoadStart: onLoadStart,
       onLoadStop: onLoadStop,
@@ -317,6 +321,9 @@ class TaobaoPageController {
     }
   ) {
 
+    // NOTE: fix bug in getter null
+    if (options==null) options = PageOptions();
+
     // if (H5PageUrls.isLogin(url)) return Future.error("don't allow open login page");
 
     // TODO: reuse page with empty job queue, except which has keepalive
@@ -326,7 +333,7 @@ class TaobaoPageController {
       return Future.error("max tab ${_state.widget.maxTab}");
     }
 
-    if (options.max > 0) {
+    if (options!=null && options.max > 0) {
       List<Page> ps = _state._pages.where((p) => p.match(url)).toList();
       if (ps.length >= options.max) {
         // TODO: get the random page

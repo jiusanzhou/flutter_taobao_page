@@ -32,7 +32,7 @@ class PCWeb {
   }
 
   Future<dynamic> vipScore() {
-    return controller.doAction(vipScoreAction);
+    return controller.doAction(vipScoreAction, options: PageOptions(timeout: const Duration(seconds: 5)));
   }
 
   Future<dynamic> rateScore() {
@@ -58,7 +58,14 @@ class PCWeb {
           controller.loadUrl(url: PCPageUrls.order);
         }
       },
-    );
+    ).then((value) {
+      // check verify code
+      if (value["rgv587_flag"]=="sm" && value["url"]!="" && value["url"].indexOf("_____tmd_____") > 0) {
+        // we nee to show web, how to pass the page instance out
+        return Future.error("verify_code");
+      }
+      return value;
+    });
   }
 }
 

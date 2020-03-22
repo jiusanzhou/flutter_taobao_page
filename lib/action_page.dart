@@ -30,13 +30,18 @@ class PageOptions {
 
   String title;
 
+  // max page of my
   int max;
+
+  // timeout for page load
+  Duration timeout;
 
   PageOptions({
     this.keepalive: false,
     this.visible: false,
     this.title,
     this.max: 1,
+    this.timeout,
   });
 }
 
@@ -114,6 +119,15 @@ class Page {
       onLoadStop: _onLoadStop,
       onLoadError: _onLoadError,
     );
+
+    // set a timeout
+    if (options.timeout!=null) Timer(options.timeout, () {
+      // timeout, stop laoding
+      webviewController.isLoading().then((value) {
+        print("[action page] laod timeout ${options.timeout} => $_url");
+        if (value) webviewController.stopLoading();
+      });
+    });
 
     // start a routine to execute
     _actTimer = Timer.periodic(_actInterval, (timer) {
