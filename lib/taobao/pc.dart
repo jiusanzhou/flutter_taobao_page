@@ -6,14 +6,14 @@ class PCWeb {
 
   PCWeb(this.controller);
 
-  static ActionJob userBaseInfoAction = ActionJob(PCPageUrls.userBaseInfo, code: PCCode.userBaseInfo());
-  static ActionJob accountProfileAction = ActionJob(PCPageUrls.accountProfile, code: PCCode.accountProfile());
-  static ActionJob accountSecurityAction = ActionJob(PCPageUrls.accountSecurity, code: PCCode.accountSecurity());
-  static ActionJob rateScoreAction = ActionJob(PCPageUrls.rateScore, code: PCCode.rateScore());
-  static ActionJob certityInfoAction = ActionJob(PCPageUrls.certityInfo, code: PCCode.certityInfo());
-  static ActionJob vipScoreAction = ActionJob(PCPageUrls.vipScore, code: PCCode.vipScore());
-  static ActionJob aliStarAction = ActionJob(PCPageUrls.aliStar, code: PCCode.aliStar());
-  static ActionJob disputeAction = ActionJob(PCPageUrls.dispute, code: PCCode.dispute());
+  static ActionJob userBaseInfoAction = ActionJob(PCPageUrls.userBaseInfo, code: PCCode.userBaseInfo(), isAsync: false);
+  static ActionJob accountProfileAction = ActionJob(PCPageUrls.accountProfile, code: PCCode.accountProfile(), isAsync: false);
+  static ActionJob accountSecurityAction = ActionJob(PCPageUrls.accountSecurity, code: PCCode.accountSecurity(), isAsync: false);
+  static ActionJob rateScoreAction = ActionJob(PCPageUrls.rateScore, code: PCCode.rateScore(), isAsync: false);
+  static ActionJob certityInfoAction = ActionJob(PCPageUrls.certityInfo, code: PCCode.certityInfo(), isAsync: false);
+  static ActionJob vipScoreAction = ActionJob(PCPageUrls.vipScore, code: PCCode.vipScore(), isAsync: false);
+  static ActionJob aliStarAction = ActionJob(PCPageUrls.aliStar, code: PCCode.aliStar(), isAsync: false);
+  static ActionJob disputeAction = ActionJob(PCPageUrls.dispute, code: PCCode.dispute(), isAsync: false);
 
   Future<dynamic> userBaseInfo() {
     return controller.doAction(userBaseInfoAction);
@@ -47,8 +47,8 @@ class PCWeb {
     return controller.doAction(disputeAction);
   }
 
-  Future<dynamic> order(int page, {int count = 20, String type = ""}) {
-    return controller.doAction(ActionJob(PCPageUrls.order, code: PCCode.order(page, count: count, type: type)));
+  Future<dynamic> order(int page, {int count = 20, String type = "", bool isAsync = false}) {
+    return controller.doAction(ActionJob(PCPageUrls.order, code: PCCode.order(page, count: count, type: type), isAsync: isAsync));
   }
 }
 

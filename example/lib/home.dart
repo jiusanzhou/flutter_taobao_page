@@ -165,29 +165,16 @@ class _HomePageState extends State<HomePage> {
       print("[error] rateScore => $e");
     });
 
-    // _controller.pcweb.dispute().then((value) {
-    //   print("[error] dispute => $e");
-    // });
-
-    // 订单信息
-    // _controller.openPage(PCPageUrls.order, options: PageOptions(visible: true, title: "订单信息")).then((value) {
-    //   _controller.pcweb.order(1).then((value) {
-    //     print("order => $value");
-    //   }).catchError((e) {
-    //     print("[error] order => $e");
-    //   });
-    // }); //   print("[8] dispute => $value");
-    // }).catchError((e) {
-   
-
-    // 评价
-    // openPage(PCPageUrls.rateScore, "评价", PCWeb.rateScoreAction).then((value) {
-    //   print("[7] dispute => $value");
-    // });
-
-    // 退款管理
-    openPage(PCPageUrls.dispute, "退款管理", PCWeb.disputeAction).then((value) {
+    _controller.pcweb.dispute().then((value) {
       print("[8] dispute => $value");
+    }).catchError((e) {
+      print("[error] dispute => $e");
+    });
+
+    _controller.pcweb.order(1).then((value) {
+      print("[9] order => $value");
+    }).catchError((e) {
+      print("[error] order => $e");
     });
   }
 

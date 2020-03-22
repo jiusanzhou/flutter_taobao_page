@@ -14,11 +14,12 @@ class ActionJob {
 
   // allow execute with login
   bool noLogin;
+  bool isAsync;
 
   // bind page for this action
   // Page page; , @required this.page
 
-  ActionJob(this.url, { this.code, this.noLogin: false });
+  ActionJob(this.url, { this.code, this.noLogin: false, this.isAsync: true });
 }
 
 class PageOptions {
@@ -184,7 +185,7 @@ class Page {
   }
 
   // all result need to use channel
-  void _runJS(String vid, String code) {
+  void _runJS(String vid, String code, {bool isAsync: true}) {
     // 
     // check if type is promise: typeof subject.then == 'function'
     //
@@ -198,6 +199,17 @@ class Page {
     // some lower android don't supported es6
     // but the inappwebview has inject polyfill for promise
     // NOTE: try not to use arrow function and `let`.
+
+
+    // if not isAsync we just eval the code and return
+    if (!isAsync) {
+      webviewController.evaluateJavascript(source: "(function(){ $code })()").then((value) {
+        _onJsResultHandler([vid, value, null]);
+      }).catchError((e) {
+        _onJsResultHandler([vid, null, e]);
+      });
+      return;
+    }
 
     // (()=>{})(), return, res,
     String vcode = """(function() {
@@ -226,7 +238,11 @@ class Page {
 
     webviewController.evaluateJavascript(source: vcode).then((value) {
       // TODO: some value we just call _callHandler?
-      // print("[action js] evalute result => $value");
+      if (value == "") {
+        print("[action js] evalute result success => $value");
+      } else {
+        print("[action js] evaluate error, shoud't return null");
+      }
     }).catchError((e) {
       print("[action js] evaluate error => $e");
     });
@@ -237,7 +253,7 @@ class Page {
     if (_actionsQueue.isEmpty) return;
     // FIFO
     ActionJob act = _actionsQueue.removeFirst();
-    _runJS(act.vid, act.code);
+    _runJS(act.vid, act.code, isAsync: act.isAsync);
   }
 
   void _onWebViewCreated(InAppWebViewController controller) {
