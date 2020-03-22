@@ -388,9 +388,13 @@ class TaobaoPageController {
 
   // show special page with url
   void showPageWithUrl(String url) {
-    Page page = _state._pages.firstWhere((element) => element.match(url), orElse: () => null);
+    Page page = getPageWithUrl(url);
     if (page!=null) return showPage(page);
     print("can't found page with url: $url, maybe you should open it first.");
+  }
+
+  Page getPageWithUrl(String url) {
+    return _state._pages.firstWhere((element) => element.match(url), orElse: () => null);
   }
 
   // clean and reset
