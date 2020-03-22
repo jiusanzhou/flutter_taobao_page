@@ -125,7 +125,10 @@ class Page {
       // timeout, stop laoding
       webviewController.isLoading().then((value) {
         print("[action page] laod timeout ${options.timeout} => $_url");
-        if (value) webviewController.stopLoading();
+        if (value) {
+          // call directlly
+          _onLoadStop(webviewController, _url);
+        }
       });
     });
 
@@ -172,6 +175,9 @@ class Page {
       return Future.error("[action] timeout: $timeout");
     });
   }
+
+  String get url => _url;
+  String get normalizeUrl => _normalizeUrl;
 
   void _setUrl(String url) {
     _url = url;

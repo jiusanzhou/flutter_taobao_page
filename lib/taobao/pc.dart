@@ -32,7 +32,7 @@ class PCWeb {
   }
 
   Future<dynamic> vipScore() {
-    return controller.doAction(vipScoreAction, options: PageOptions(timeout: const Duration(seconds: 5)));
+    return controller.doAction(vipScoreAction, options: PageOptions(timeout: const Duration(seconds: 10)));
   }
 
   Future<dynamic> rateScore() {
@@ -56,7 +56,11 @@ class PCWeb {
           print("[page taobao order] verify code, need to reload");
           // just reload
           controller.loadUrl(url: PCPageUrls.order);
+          return;
         }
+
+        // normal load order page
+        // display
       },
     ).then((value) {
       // check verify code

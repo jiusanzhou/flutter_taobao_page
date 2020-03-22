@@ -110,6 +110,15 @@ class _HomePageState extends State<HomePage> {
   void _startProcess() async {
     // 开始准备去验证号
     print("开始去验号");
+
+    _controller.pages.forEach((element) { print("page url => ${element.url} - ${element.normalizeUrl}"); });
+
+    _controller.pcweb.vipScore().then((value) {
+      print("[6] vipScore => $value");
+    }).catchError((e) {
+      print("[error] vipScore => $e");
+    });
+    return;
     
     // _controller.showPageWithUrl(PCPageUrls.certityInfo);
     // _controller.showPageWithUrl(PCPageUrls.dispute);
