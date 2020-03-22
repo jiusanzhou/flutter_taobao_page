@@ -69,6 +69,9 @@ class Page {
 
   Timer _actTimer;
 
+  // NOTE: make sure stop fucntion run once
+  bool _stopped = false;
+
   ///Event fired when the [InAppWebView] is created.
   final void Function(InAppWebViewController controller) onWebViewCreated;
 
@@ -149,7 +152,7 @@ class Page {
 
   // match current url
   bool match(String _url) {
-    return _url == _normalizeUrl;
+    return _url.split("?")[0] == _normalizeUrl;
   }
 
   // run action
@@ -286,6 +289,9 @@ class Page {
   }
 
   _onLoadStart(InAppWebViewController controller, String url) {
+    // NOTE: must reset for call
+    _stopped = false;
+
     _queuePaused = true;
 
     if (_missES6) controller.evaluateJavascript(source: """if (!Array.from) {
@@ -296,6 +302,11 @@ class Page {
   }
 
   _onLoadStop(InAppWebViewController controller, String url) {
+    // NOTE: make sure run once 
+    if (_stopped) return;
+
+    _stopped = true;
+
     _queuePaused = false;
 
     _setUrl(url);
