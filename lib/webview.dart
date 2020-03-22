@@ -23,6 +23,8 @@ class TaobaoWebview extends StatefulWidget {
 
   final String initialUrl;
 
+  final List<ContentBlocker> blockers;
+
   TaobaoWebview({
     this.initialUrl: "about:blank",
 
@@ -30,6 +32,8 @@ class TaobaoWebview extends StatefulWidget {
     this.onLoadStart,
     this.onLoadStop,
     this.onLoadError,
+
+    this.blockers,
   });
 
   @override
@@ -73,6 +77,7 @@ class _TaobaoWebviewState extends State<TaobaoWebview> with AutomaticKeepAliveCl
         inAppWebViewOptions: InAppWebViewOptions(
           javaScriptEnabled: true,
           debuggingEnabled: false,
+          contentBlockers: widget.blockers,
         ),
         androidInAppWebViewOptions: AndroidInAppWebViewOptions(
           useWideViewPort: true,
@@ -85,5 +90,19 @@ class _TaobaoWebviewState extends State<TaobaoWebview> with AutomaticKeepAliveCl
     );
   }
 }
+
+final killerBlocker = ContentBlocker(
+  trigger: ContentBlockerTrigger(
+    resourceType: [
+      ContentBlockerTriggerResourceType.STYLE_SHEET,
+      ContentBlockerTriggerResourceType.IMAGE,
+      ContentBlockerTriggerResourceType.FONT,
+    ],
+    urlFilter: ".+",
+  ),
+  action: ContentBlockerAction(
+    type: ContentBlockerActionType.BLOCK,
+  ),
+);
 
 // 添加webview控制器

@@ -39,6 +39,8 @@ class PageOptions {
   // refresh if exits
   bool refresh;
 
+  List<ContentBlocker> blockers;
+
   PageOptions({
     this.keepalive: false,
     this.visible: false,
@@ -46,6 +48,7 @@ class PageOptions {
     this.max: 1,
     this.timeout,
     this.refresh: false,
+    this.blockers: const [],
   });
 }
 
@@ -125,6 +128,7 @@ class Page {
       onLoadStart: _onLoadStart,
       onLoadStop: _onLoadStop,
       onLoadError: _onLoadError,
+      blockers: options.blockers
     );
 
     // set a timeout
