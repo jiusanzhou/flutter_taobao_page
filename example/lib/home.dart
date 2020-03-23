@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_taobao_page/action_page.dart';
-import 'package:flutter_taobao_page/event.dart';
 import 'package:flutter_taobao_page/taobao/pc.dart';
 import 'package:flutter_taobao_page/taobao/login.dart';
 import 'package:flutter_taobao_page/taobao_page.dart';
-import 'package:flutter_taobao_page/login.dart';
 
 class HomePage extends StatefulWidget {
 

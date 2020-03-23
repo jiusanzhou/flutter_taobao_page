@@ -63,54 +63,12 @@ class _TaobaoPageState extends State<TaobaoPage>
     _controller = TaobaoPageController._(this);
     // we need to subscribe event in this function
     widget.onCreated?.call(_controller);
-    _initAsync();
   }
 
   @override
   void dispose() {
     _tabController.dispose();
     super.dispose();
-  }
-
-  _initAsync() async {
-
-    // take the login page out of this
-
-    // first create a login page for all state.
-    // Page _homepage;
-    // _homepage = await _controller.openPage(
-    //   H5PageUrls.login, // what about we open login page directlly?
-    //   options: PageOptions(
-    //     keepalive: true,
-    //     visible: true,
-    //     refresh: true,
-    //   ),
-    //   onLoadStop: (controller, url) {
-    //     print("[login page] ====> $url");
-    //     // if we are login page, just set we are logon page
-    //     if (H5PageUrls.isLogin(url)) {
-    //       // has login page
-    //       print("[taobao page] has login page");
-    //       _controller.emit(EventHasLoginPage(_homepage, url));
-    //       setState(() => _hasLoginPage = true);
-    //       return;
-    //     }
-
-    //     // otherwize just remoe sign
-    //     if (_hasLoginPage) setState(() => _hasLoginPage = false);
-
-    //     // if we are a home page, we need to check if we contains a login page.
-    //     if (!_hasLoginPage && H5PageUrls.isHome(url)) {
-    //       // otherwize check if we have logon
-    //       // set the page's url to be home page???
-    //       print("[taobao page] guess we have login success => $url");
-    //       // TODO: trick, in some low version android, we can't check use h5api
-    //       setState(() => _isLogon = true);
-    //       widget.onUserLogon?.call(_controller, null);
-    //     }
-    //   },
-    // );
-  
   }
 
   // groups
@@ -194,9 +152,9 @@ class _TaobaoPageState extends State<TaobaoPage>
     });
 
     // clean it
-    _pages.clear();
-
-    _initAsync();
+    setState(() {
+      _pages.clear();
+    });
   }
 }
 

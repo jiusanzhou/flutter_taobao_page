@@ -17,6 +17,10 @@ class H5PasswordTaobaoLoginPage extends TaobaoLoginPage {
   bool _isLogon = false;
 
   bool get isLogin => _isLogon;
+
+  clear() {
+    _isLogon = false; 
+  }
   
   open(BuildContext context) {
     // open a new web page
