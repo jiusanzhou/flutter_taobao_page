@@ -84,6 +84,7 @@ class _TaobaoPageState extends State<TaobaoPage>
       options: PageOptions(
         keepalive: true,
         visible: true,
+        refresh: true,
       ),
       onLoadStop: (controller, url) {
         print("[login page] ====> $url");

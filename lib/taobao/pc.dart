@@ -47,7 +47,8 @@ class PCWeb {
     return controller.doAction(disputeAction);
   }
 
-  Future<dynamic> order(int page, {int count = 20, String type = "", bool isAsync = false}) {
+  // we need to check if we has verify code
+  Future<dynamic> order(int page, {int count = 20, String type = "", bool isAsync = false, Function() onVerifyConfirm}) {
     return controller.doAction(
       ActionJob(PCPageUrls.order, code: PCCode.order(page, count: count, type: type), isAsync: isAsync),
       onLoadStop: (controller, url) {
@@ -56,11 +57,11 @@ class PCWeb {
           print("[page taobao order] verify code, need to reload");
           // just reload
           controller.loadUrl(url: PCPageUrls.order);
+
+          // call verify back
+          onVerifyConfirm?.call();
           return;
         }
-
-        // normal load order page
-        // display
       },
     ).then((value) {
       // check verify code
