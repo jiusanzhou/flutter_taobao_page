@@ -168,13 +168,6 @@ class _MyHomePageState extends State<MyHomePage> {
                 });
               },
 
-              /// 可以进行订单抓取
-              onUserLogon: (_, url) {
-                print("==========> 登录成功");
-                setState(() {
-                  _canFetch = true;
-                });
-              },
               child: NotificationListener(
                 onNotification: (ScrollNotification note) {
                   if (note.metrics.pixels == note.metrics.maxScrollExtent) {

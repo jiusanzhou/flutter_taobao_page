@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_taobao_page/action_page.dart';
 import 'package:flutter_taobao_page/event.dart';
 import 'package:flutter_taobao_page/taobao/pc.dart';
+import 'package:flutter_taobao_page/taobao/login.dart';
 import 'package:flutter_taobao_page/taobao_page.dart';
+import 'package:flutter_taobao_page/login.dart';
 
 class HomePage extends StatefulWidget {
 
@@ -29,6 +31,15 @@ class _HomePageState extends State<HomePage> {
     [ "退款", PCPageUrls.dispute ],
     [ "订单", PCPageUrls.order ],
   ];
+
+  H5PasswordTaobaoLoginPage _loginPage = H5PasswordTaobaoLoginPage(
+    onLoginPageOpend: (_) {
+      print("打开了登录页面 => $_");
+    },
+    onUserLogon: (_) {
+      print("可以验证号了");
+    },
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -61,24 +72,6 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
             ),
-            // Container(
-            //   margin: EdgeInsets.only(left: 5),
-            //   child: _controller!=null?TabBar(
-            //     isScrollable: true,
-            //     controller: _controller.tabController,
-            //     onTap: (int idx) {
-            //       _controller.tabController.index = idx;
-            //     },
-            //     tabs: List.generate(_controller.pageGroups.length, (i) {
-            //       return Tab(text: _controller.pageGroups[i][0].options.title??'我的淘宝');
-            //     }),
-            //   ):null,
-            // ),
-            // Row(
-            //   children: List.generate(_tabbar.length, (i) => Tab(child: InkWell(onTap: (){
-            //     _controller.showPageWithUrl(_tabbar[i][1]);
-            //   }, child: Text(_tabbar[i][0])))),
-            // ),
           ],
         ),
       ),
@@ -86,22 +79,13 @@ class _HomePageState extends State<HomePage> {
         onCreated: (TaobaoPageController controller) {
           // 淘宝控制器
           _controller = controller;
-
-          _controller.on<EventTabControllerUpdate>().listen((event) {
-            // 创建新页面了重新渲染
-            print("tab controller updated ===>");
-            setState(() { });
-          });
         },
-        onUserLogon: (_, data) {
-          // 自动启动验号
-          print("可以验证号了");
-        },
+        loginPage: _loginPage,
         child: Center(child: CircularProgressIndicator()),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          _startProcess();
+          _loginPage.isLogin?_startProcess():_loginPage.open(context);
         }, child: Icon(Icons.add),
       ),
     );
@@ -111,14 +95,13 @@ class _HomePageState extends State<HomePage> {
     // 开始准备去验证号
     print("开始去验号");
 
-    _controller.pages.forEach((element) { print("page url => ${element.url} - ${element.normalizeUrl}"); });
+    // _controller.pages.forEach((element) { print("page url => ${element.url} - ${element.normalizeUrl}"); });
 
-    _controller.pcweb.vipScore().then((value) {
-      print("[6] vipScore => $value");
-    }).catchError((e) {
-      print("[error] vipScore => $e");
-    });
-    return;
+    // _controller.pcweb.vipScore().then((value) {
+    //   print("[6] vipScore => $value");
+    // }).catchError((e) {
+    //   print("[error] vipScore => $e");
+    // });
     
     // _controller.showPageWithUrl(PCPageUrls.certityInfo);
     // _controller.showPageWithUrl(PCPageUrls.dispute);

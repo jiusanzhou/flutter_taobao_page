@@ -9,6 +9,13 @@ class H5API {
 
   // check if we are logon page
 
+  // h5 login action and show result with pc
+  // open a login page should add to the pages flow?
+  // NO!
+  // So, we need to open a login page and execute insert password and username
+  // if offered, on stop load, check if is home page, if true, we have load
+  // success, we need to close the login page webview imme
+
   Future<dynamic> userProfile({bool check}) {
     return controller.doAction(ActionJob(H5PageUrls.home, code: H5APICode.userProfile(), noLogin: check));
   }

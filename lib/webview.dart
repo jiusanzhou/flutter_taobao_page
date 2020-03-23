@@ -33,7 +33,7 @@ class TaobaoWebview extends StatefulWidget {
     this.onLoadStop,
     this.onLoadError,
 
-    this.blockers,
+    this.blockers: const [],
   });
 
   @override
