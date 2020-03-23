@@ -132,7 +132,11 @@ class Page {
     );
 
     // set a timeout
-    if (options.timeout!=null) Timer(options.timeout, () {
+    if (options.timeout != null) Timer(options.timeout, () {
+      if (webviewController==null) {
+        print("[action page] create webveiw timeout => $_url");
+        return;
+      }
       // timeout, stop laoding
       webviewController.isLoading().then((value) {
         print("[action page] laod timeout ${options.timeout} => $_url");

@@ -54,6 +54,7 @@ class _TaobaoPageState extends State<TaobaoPage>
 
   bool _scrollable = false;
 
+  int _tabIndex = 0;
   int _stackIndex = 0; // 当前显示栈 index
 
   // TODO: display webview or not, can be with more params：readdy, debug etc.
@@ -102,22 +103,6 @@ class _TaobaoPageState extends State<TaobaoPage>
 
         // if we are a home page, we need to check if we contains a login page.
         if (!_hasLoginPage && H5PageUrls.isHome(url)) {
-          // evaluate right now, maybe not get data expect.
-          // because dom maight not ready from js
-          // controller.evaluateJavascript(source: H5APICode.containsLoginPage()).then((value) {
-          //   print(H5APICode.containsLoginPage());
-          //   print("is login page or not => $value");
-
-          //   // if we still contains logon page just od like above;
-          //   if (value) {
-          //     // has login page
-          //     print("[taobao page] contains login page iframe");
-          //     _controller.emit(EventHasLoginPage(_homepage, url));
-          //     setState(() => _hasLoginPage = true);
-          //     return;
-          //   }
-          // });
-
           // otherwize check if we have logon
           // set the page's url to be home page???
           print("[taobao page] guess we have login success => $url");
@@ -201,6 +186,7 @@ class _TaobaoPageState extends State<TaobaoPage>
 
   void _changePage(Page page) {
     setState(() {
+      _tabIndex = page.groupId;
       _tabController.animateTo(page.groupId);
       _stackIndex = page.stackId;
     });
@@ -252,6 +238,8 @@ class TaobaoPageController {
   List<List<Page>> get pageGroups => _state._pageGroups;
 
   TabController get tabController => _state._tabController;
+
+  Page get currentViewPage => _state._pageGroups[_state._tabIndex][_state._stackIndex];
 
   // debug
   bool get isDebug => _state._debug;
