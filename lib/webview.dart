@@ -21,6 +21,8 @@ class TaobaoWebview extends StatefulWidget {
   final void Function(InAppWebViewController controller, String url, int code,
       String message) onLoadError;
 
+  final void Function(InAppWebViewController controller, int progress) onProgressChanged;
+
   final String initialUrl;
 
   final List<ContentBlocker> blockers;
@@ -32,6 +34,8 @@ class TaobaoWebview extends StatefulWidget {
     this.onLoadStart,
     this.onLoadStop,
     this.onLoadError,
+
+    this.onProgressChanged,
 
     this.blockers: const [],
   });
@@ -87,6 +91,7 @@ class _TaobaoWebviewState extends State<TaobaoWebview> with AutomaticKeepAliveCl
       onLoadStart: _onLoadStart,
       onLoadStop: _onLoadStop,
       onLoadError: _onLoadError,
+      onProgressChanged: widget.onProgressChanged,
     );
   }
 }

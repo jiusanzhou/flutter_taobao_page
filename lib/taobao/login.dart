@@ -15,11 +15,13 @@ class H5PasswordTaobaoLoginPage extends TaobaoLoginPage {
   H5PasswordTaobaoLoginPage({this.onUserLogon, this.onLoginPageOpend});
 
   bool _isLogon = false;
+  double _progress = 0;
 
   bool get isLogin => _isLogon;
 
   clear() {
-    _isLogon = false; 
+    _isLogon = false;
+    _progress = 0;
   }
   
   open(BuildContext context) {
@@ -35,6 +37,12 @@ class H5PasswordTaobaoLoginPage extends TaobaoLoginPage {
           actions: <Widget>[
             FlatButton(onPressed: () => Navigator.of(context).pop(null), child: Text("完成", style: TextStyle(color: Colors.white))),
           ],
+          // bottom: PreferredSize(
+          //   preferredSize: Size.fromHeight(4.0),
+          //   child: Container(
+          //     child: _progress < 1.0 ? LinearProgressIndicator(value: _progress) : Container(),
+          //   )
+          // ),
         ),
         body: TaobaoWebview(
           initialUrl: H5PageUrls.login,
@@ -53,6 +61,11 @@ class H5PasswordTaobaoLoginPage extends TaobaoLoginPage {
               onUserLogon?.call(null);
               Navigator.pop(context);
             }
+          },
+          onProgressChanged: (_, v) {
+            // setState(() {
+            //   _progress = v / 100;
+            // });
           },
         ),
       ),
