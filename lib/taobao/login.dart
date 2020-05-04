@@ -24,7 +24,7 @@ class H5PasswordTaobaoLoginPage extends TaobaoLoginPage {
     _progress = 0;
   }
   
-  open(BuildContext context, { bool smsMode: true }) {
+  open(BuildContext context, { bool smsMode = true }) {
     // open a new web page
     Navigator.push(context, MaterialPageRoute(
       builder: (context) => Scaffold(
@@ -54,11 +54,13 @@ class H5PasswordTaobaoLoginPage extends TaobaoLoginPage {
               onLoginPageOpend?.call(url);
 
               // set password input to text
-              smsMode ?? Future.delayed(Duration(milliseconds: 500), () {
-                controller.evaluateJavascript(source: """
-                let i = document.querySelector('.sms-login-link'); i && i.click();''
-                """);
-              });
+              if (smsMode) {
+                Future.delayed(Duration(milliseconds: 50), () {
+                  controller.evaluateJavascript(source: """
+                  let i = document.querySelector('.sms-login-link'); i && i.click();''
+                  """);
+                });
+              }
 
               return;
             }
