@@ -52,6 +52,14 @@ class H5PasswordTaobaoLoginPage extends TaobaoLoginPage {
               print("[taobao page] has login page");
               _isLogon = false;
               onLoginPageOpend?.call(url);
+
+              // set password input to text
+              Future.delayed(Duration(milliseconds: 500), () {
+                // controller.evaluateJavascript(source: """
+                // let i = document.querySelector('#fm-login-id');
+                // i.hidden=true;''
+                // """);
+              });
               return;
             }
 
