@@ -49,9 +49,11 @@ class PCWeb {
 
   // we need to check if we has verify code
   Future<dynamic> order(int page, {int count = 20, String type = "", bool isAsync = false, Function() onVerifyConfirm}) {
+    var _wc;
     return controller.doAction(
       ActionJob(PCPageUrls.order, code: PCCode.order(page, count: count, type: type), isAsync: isAsync),
       onLoadStop: (controller, url) {
+        _wc = controller;
         // check verify code
         if (url.indexOf("_____tmd_____/verify") > 0) {
           print("[page taobao order] verify code, need to reload");
@@ -67,6 +69,8 @@ class PCWeb {
       // check verify code
       if (value["rgv587_flag"]=="sm" && value["url"]!="" && value["url"].indexOf("_____tmd_____") > 0) {
         // we nee to show web, how to pass the page instance out
+        // TODO: sometime we don't display verify page on webview, but get error data in api.
+        _wc.loadUrl(url: value["url"]);
         return Future.error("verify_code");
       }
       return value;
