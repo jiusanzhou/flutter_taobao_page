@@ -1,6 +1,6 @@
 name: flutter_taobao_page
 description: Scrape personal data from taobao(淘宝) by webview in a application.
-version: 0.2.1
+version: 0.3.0
 author: Zoe <hi@zoe.im>
 homepage: https://github.com/jiusanzhou/flutter_taobao_page
 
@@ -22,6 +22,8 @@ dev_dependencies:
 # The following section is specific to Flutter.
 flutter:
 
+  assets:
+    - assets/js/polyfill.js
   # To add assets to your package, add an assets section, like this:
 
   #
