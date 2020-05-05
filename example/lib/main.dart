@@ -1,6 +1,10 @@
 import 'dart:async';
 
+import 'package:example/home.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_taobao_page/event.dart';
+import 'package:flutter_taobao_page/hack.dart';
+import 'package:flutter_taobao_page/taobao/h5.dart';
 import 'package:flutter_taobao_page/taobao_page.dart';
 
 void main() => runApp(MyApp());
@@ -25,7 +29,7 @@ class MyApp extends StatelessWidget {
         primaryColor: Colors.blue,
         primarySwatch: Colors.blue,
       ),
-      home: MyHomePage(title: '淘宝数据 Demo'),
+      home: HomePage(title: '淘宝数据'),
     );
   }
 }
@@ -74,7 +78,7 @@ class _MyHomePageState extends State<MyHomePage> {
       _busy = true;
     });
     int _page = _currentPages[type] ?? 0;
-    _controller.getOrder(_page + 1, count: 5, type: type).then((data) {
+    _controller.pcweb.order(_page + 1, count: 5, type: type).then((data) {
       if (_allOrders[type] == null) _allOrders[type] = [];
     
       setState(() {
@@ -97,7 +101,6 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
   }
 
@@ -122,12 +125,12 @@ class _MyHomePageState extends State<MyHomePage> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
-                    Text("${widget.title} v0.2.1"),
+                    Text("${widget.title} v0.3.0"),
                     HackKeepAlive(),
                   ],
                 ),
                 onDoubleTap: () {
-                  _controller.toggleWebview();
+                  _controller.setDebug(!_controller.isDebug);
                 },
               ),
               bottom: _canFetch ? AppBar(
@@ -138,7 +141,7 @@ class _MyHomePageState extends State<MyHomePage> {
               actions: <Widget>[
                 IconButton(
                   onPressed: () {
-                    _controller.reset();
+                    _controller.pages[0].webviewController.reload();
                     setState(() {
                       _currentPages = {};
                       _loading = true;
@@ -154,21 +157,17 @@ class _MyHomePageState extends State<MyHomePage> {
               /// 抓取模块创建: 这里拿到controller
               onCreated: (TaobaoPageController controller) {
                 _controller = controller;
-              },
 
-              /// 可以进行登录
-              onInit: () {
-                setState(() {
-                  _loading = false;
+                _controller.on<EventPageLoadStop>().listen((event) {
+                  // 是否是登录页面
+                  if (H5PageUrls.isLogin(event.url)) {
+                    setState(() {
+                      _loading = false;
+                    });
+                  }
                 });
               },
 
-              /// 可以进行订单抓取
-              onReady: () {
-                setState(() {
-                  _canFetch = true;
-                });
-              },
               child: NotificationListener(
                 onNotification: (ScrollNotification note) {
                   if (note.metrics.pixels == note.metrics.maxScrollExtent) {
@@ -273,7 +272,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void _loadTradeDetail(String orderId) async {
     print("===> 即将获取订单物流详情 $orderId");
-    _controller.getTradeDetail(orderId).then((value) {
+    _controller.h5api.logisDetail(orderId).then((value) {
       print("得到订单物流详情 $value");
       _transDataController.add(value);
     }).catchError((e) {

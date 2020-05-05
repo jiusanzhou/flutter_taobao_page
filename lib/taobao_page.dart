@@ -1,356 +1,341 @@
-library flutter_taobao_page;
-
-import 'dart:io';
 import 'dart:async';
-import 'dart:convert';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:flutter_taobao_page/action_page.dart';
+import 'package:flutter_taobao_page/event.dart';
+import 'package:flutter_taobao_page/login.dart';
+import 'package:flutter_taobao_page/page_view.dart';
+import 'package:flutter_taobao_page/taobao/h5.dart';
+import 'package:flutter_taobao_page/taobao/pc.dart';
 import 'package:flutter_taobao_page/utils.dart';
+import 'package:flutter_taobao_page/webview.dart';
 
-typedef void PageFinishCallback(InAppWebViewController controller, String url);
-
-typedef void OnCreatedCallback(TaobaoPageController controller);
-typedef void InitCallback();
-typedef void ReadyCallback();
-
-/// 淘宝数据webview.
-/// !!!最小化实现，不要考虑太多.
 class TaobaoPage extends StatefulWidget {
-  /// 参数 `child` 不能为空
-  TaobaoPage({
-    Key key,
-    @required this.child,
-    this.loginPage = TaobaoUrls.loginPage,
-    this.homePage = TaobaoUrls.homePage,
-    this.orderPage = TaobaoUrls.orderPage,
-    this.onCreated,
-    this.onInit,
-    this.onReady,
-  })  : assert(child != null),
-        super(key: key);
 
-  /// iOS 和 Android 返回值有差异
-  /// inapp 不需要
-  final isAndroid = false; // Platform.isAndroid;
+  final int maxTab;
 
-  /// 创建初始化函数
-  final OnCreatedCallback onCreated;
-
-  /// 初始化函数, 登录页面加载完成
-  final InitCallback onInit;
-
-  /// ready函数, 订单页数据可用
-  final ReadyCallback onReady;
-
-  /// 显示的内容,不能为空
   final Widget child;
 
-  /// 数据页面地址
-  final String loginPage;
-  final String homePage;
-  final String orderPage;
+  final LoginPage loginPage;
+
+  final void Function(TaobaoPageController controller) onCreated;
+
+  TaobaoPage({
+    @required this.child,
+    @required this.loginPage,
+    this.maxTab: 20,
+    this.onCreated,
+  });
 
   @override
   _TaobaoPageState createState() => _TaobaoPageState();
 }
 
 class _TaobaoPageState extends State<TaobaoPage>
-    with AutomaticKeepAliveClientMixin<TaobaoPage> {
-
-  final Completer<TaobaoPageController> _controller =
-      Completer<TaobaoPageController>();
+  with TickerProviderStateMixin<TaobaoPage>, AutomaticKeepAliveClientMixin<TaobaoPage> {
 
   @override
   bool get wantKeepAlive => true;
 
-  /// webview 控制器
-  /// 后续所有操作都是通过她来进行
-  InAppWebViewController _webview;
+  TaobaoPageController _controller;
 
-  /// TODO: 
-  InAppWebViewController _webview2;
+  TabController _tabController;
 
-  /// 路径回调函数
-  /// 通过注册的方式添加
-  /// TODO: 封装,优化匹配规则
-  Map<String, PageFinishCallback> _callbacks = {};
+  List<Page> _pages = [];
+  List<List<Page>> _pageGroups = [];
 
-  /// js code
-  String _jscode = "";
+  bool get _isLogon => widget.loginPage.isLogin;
 
-  /// 是否显示webview, 初始化的时候会设置,其他的时候也可以手动设置
-  bool _showWebview = false;
+  bool _debug = false;
 
-  /// 是否已经登录
-  /// TODO: add user infomation
-  bool _isLogin = false;
+  bool _scrollable = false;
 
-  /// 订单抓取准备就绪
-  /// TODO: hard code
-  bool _ready;
-  bool _ready2; // 详情页面就绪
+  int _tabIndex = 0;
+  int _stackIndex = 0;
 
-  /// debug
-  bool debug;
-
-  /// 保存Cookies
-  String Cookies;
+  bool get _showWebview => _debug;
 
   @override
   void initState() {
     super.initState();
-
-    /// 添加默认的回调函数
-    /// TODO: 注册成资源,所有的操作都可以通过资源的接口
-    /// TODO: widget中的可以添加过来
-    _callbacks[widget.loginPage] = _afterLoginPage;
-    _callbacks[widget.homePage] = _afterHomePage;
-    _callbacks[widget.orderPage] = _afterOrderPage;
-
-    // webview2 也用这个, TODO: 更改状态
-    _callbacks[TaobaoUrls.homePageMain] = null;
-
-    _initAsync();
+    // create controller once
+    _controller = TaobaoPageController._(this);
+    // we need to subscribe event in this function
+    widget.onCreated?.call(_controller);
   }
 
   @override
   void dispose() {
+    _tabController.dispose();
     super.dispose();
   }
 
-  @override
-  void didUpdateWidget(Widget old) {
-    super.didUpdateWidget(old);
-  }
-
-  void _onWebViewCreated(InAppWebViewController controller) {
-    _webview = controller;
-
-    final TaobaoPageController m = TaobaoPageController._(this, _webview);
-    _controller.complete(m);
-    if (widget.onCreated != null) widget.onCreated(m);
-  }
-
-  /// 异步初始化
-  void _initAsync() async {
-    _jscode = TaobaoJsCode.orderPage;
-  }
-
-  /// 处理回调函数
-  /// TODO: 使用精准方式匹配
-  void _onPageFinished(InAppWebViewController controller, String url) {
-    String _url = url.split("?")[0];
-    PageFinishCallback fn = _callbacks[_url];
-    if (fn != null) fn(_webview, url);
-  }
-
-  /// 登录页加载完成
-  void _afterLoginPage(InAppWebViewController controller, String url) {
-    /// 设置为显示webview
-    setState(() {
-      _showWebview = true;
-      _showIndex = 1;
+  // groups
+  List<List<Page>> _buildPageGroups(BuildContext context) {
+    List<List<Page>> tabs = [];
+    List<Page> _tmp = [];
+    int _idx = 0; // TODO: more customize, now always be the first one.
+    _pages.forEach((p) {
+      p.options.visible?tabs.add([p]):tabs.isEmpty?_tmp.add(p):tabs[_idx].add(p);
     });
+    (tabs.isEmpty||tabs[_idx].isEmpty)?tabs.add(_tmp):tabs[_idx].addAll(_tmp);
 
-    /// 插入js: 点击登录时自动隐藏webview
-
-    if (widget.onInit != null) widget.onInit();
-  }
-
-  /// 主页加载完成
-  void _afterHomePage(InAppWebViewController controller, String url) {
-    setState(() {
-      /// 这里隐藏
-      _showWebview = false;
-      _showIndex = 0;
-
-      /// 设置登录成功
-      _isLogin = true;
-    });
-
-    /// 加载到订单页面
-    _webview.loadUrl(url: widget.orderPage);
-  }
-
-  /// 订单页加载完成
-  void _afterOrderPage(InAppWebViewController controller, String url) async {
-
-    /// 插入js: 插入函数可以获取订单
-    _webview.evaluateJavascript(source: _jscode).then((_) {
-      print("im.zoe.taobao_page [INFO] insert javascipt code");
-
-      /// 设置为ready
-      setState(() {
-        _ready = true;
+    // set group id and stack id
+    tabs.asMap().forEach((_grpid, element) {
+      element.asMap().forEach((_stkid, value) {
+        value.groupId = _grpid;
+        value.stackId = _stkid;
       });
-
-      if (widget.onReady != null) widget.onReady();
-    }).catchError((e) {
-      print("im.zoe.taobao_page [ERROR] insert javascript code: $e");
     });
-  }
 
-  void _afterHomePageMain(InAppWebViewController controller, String url) async {
-    _webview.evaluateJavascript(source: _jscode).then((_) {
-      print("im.zoe.taobao_page [INFO] insert javascipt code");
-    });
-  }
+    // update the _tab controller
+    // _tabController?.dispose();
+    if (_tabController == null || tabs.length != _tabController.length) {
+      _tabController = TabController(initialIndex: tabs.length-1, length: tabs.length, vsync: this);
+      _controller.emit(EventTabControllerUpdate(_tabController));
+    }
 
-  Map<String, Completer> _waitCompleters = {};
-
-  /// 内容处理
-  dynamic _onPostDataHandler(List<dynamic> arguments) {
-    _waitCompleters.remove(arguments[0])?.complete(arguments[1]);
-    return "";
-  }
-
-  /// 增加多个webview
-
-  int _showIndex = 0;
-
-  void toggleWebview({bool show}) {
-    setState(() {
-      // page max
-      _showIndex = _showIndex == 2 ? 0 : (_showIndex+1);
-    });
+    return tabs;
   }
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
+    // rebuild pages, TODO: remove not nece
+    _pageGroups = _buildPageGroups(context);
     return IndexedStack(
-      index: _showIndex,
+      index: _showWebview?1:0,
       children: <Widget>[
-        /// 显示内容
         widget.child,
-
-        /// webview
-        InAppWebView(
-          initialUrl: widget.loginPage,
-          initialOptions: InAppWebViewWidgetOptions(inAppWebViewOptions: InAppWebViewOptions(javaScriptEnabled: true)),
-          onWebViewCreated: _onWebViewCreated,
-          onLoadStop: _onPageFinished,
-        ),
-
-        /// TODO: 自动管理页面标签
-        InAppWebView(
-          initialUrl: TaobaoUrls.homePageMain, // 登录前前面不要做任何事情
-          initialOptions: InAppWebViewWidgetOptions(inAppWebViewOptions: InAppWebViewOptions(javaScriptEnabled: true)),
-          onWebViewCreated: (controller) {
-            _webview2 = controller;
-            _webview2.addJavaScriptHandler(handlerName: "PostData", callback: _onPostDataHandler);
-          },
-          onLoadStop: _onPageFinished,
+        TaobaoPageView(
+          scrollable: _scrollable,
+          stackIndex: _stackIndex,
+          groupedPages: _pageGroups,
+          tabController: _controller.tabController,
+          // children: List.generate(min(widget.maxTab, _pages.length), (index) => _pages[index])
         ),
       ],
     );
   }
+
+  void _addPage(Page page) {
+    setState(() {
+      _pages.add(page);
+    });
+  }
+
+  void _setDebug(bool v) {
+    setState(() => _debug = v);
+  }
+
+  void _setScrollable(bool v) {
+    setState(() => _scrollable = v);
+  }
+
+  void _changePage(Page page) {
+    setState(() {
+      _tabIndex = page.groupId;
+      _tabController.animateTo(page.groupId);
+      _stackIndex = page.stackId;
+    });
+  }
+
+  void _reset() {
+    // clean all state and call initAsync again
+    _stackIndex = 0;
+
+    // romove alll pages;
+    _pages.forEach((p) {
+      // must destroy
+      p.destroy();
+    });
+
+    // clean it
+    setState(() {
+      _pages.clear();
+    });
+  }
 }
 
-/// 控制器
 class TaobaoPageController {
+
+  _TaobaoPageState _state;
+
+  EventBus _eventBus;
+
+  // is login
+  PCWeb pcweb;
+  H5API h5api;
+
   TaobaoPageController._(
-    this._widget,
-    this._webview,
-  );
+    this._state,
+  ) {
 
-  _TaobaoPageState _widget;
+    _eventBus = EventBus();
 
-  InAppWebViewController _webview;
-
-  /// 获取订单数据
-  /// TODO: 缓存
-  Future<Map<String, dynamic>> getOrder(int page, {int count = 20, String type = ""}) async {
-    /// 请求js
-    var res =
-        await _webview.evaluateJavascript(source: TaobaoJsCode.getOrder(page, count, type));
-
-    /// 反序列化
-    try {
-      Map<String, dynamic> _map =
-          _widget.widget.isAndroid ? json.decode(json.decode(res)) : json.decode(res);
-      return _map;
-    } catch (e) {
-      return Future.error(e);
-    }
+    // TODO: start timer to clean inactive page
+    pcweb = PCWeb(this);
+    h5api = H5API(this);
   }
 
-  /// 获取订单物流数据
-  /// TODO: 缓存
-  Future<Map<String, dynamic>> getTranSteps(String orderId) async {
-    /// 请求js
-    var res =
-        await _webview.evaluateJavascript(source: TaobaoJsCode.getTranSteps(orderId));
+  // pages return pages we have
+  List<Page> get pages => _state._pages;
 
-    /// 反序列化
-    try {
-      Map<String, dynamic> _map = 
-          _widget.widget.isAndroid ? json.decode(json.decode(res)) : json.decode(res);
-      return _map;
-    } catch (e) {
-      return Future.error(e);
-    }
+  // grooups pages
+  List<List<Page>> get pageGroups => _state._pageGroups;
+
+  TabController get tabController => _state._tabController;
+
+  Page get currentViewPage => _state._pageGroups[_state._tabIndex][_state._stackIndex];
+
+  // debug
+  bool get isDebug => _state._debug;
+
+  // subscribe event, add filter with field
+  Stream<T> on<T>() {
+    return _eventBus.on<T>();
   }
 
-  /// 获取订单详情
-  Future<dynamic> getOrderDetail(String orderId, {Duration timeout: const Duration(seconds: 10)}) async {
-    Completer completer = Completer();
-    _widget._waitCompleters["order_detail_$orderId"] = completer;
-    await _widget._webview2.evaluateJavascript(source: TaobaoJsCode.apiOrderDetail(orderId));
-    return completer.future.timeout(timeout, onTimeout: () {
-      _widget._waitCompleters.remove("order_detail_$orderId");
-      return Future.error("执行任务超时($timeout)");
+  // emit event
+  void emit(event) {
+    _eventBus.fire(event);
+  }
+
+  void setDebug(bool v) {
+    _state._setDebug(v);
+  }
+
+  void showWebview(bool v) {
+    setDebug(v);
+  }
+
+  void setScrollable(bool v) {
+    _state._setScrollable(v);
+  }
+
+  Future<dynamic> doAction(
+    ActionJob action,
+    {
+      CreatedCallback onCreated,
+      LoadStartCallback onLoadStart,
+      LoadStopCallback onLoadStop,
+      LoadErrorCallback onLoadError,
+      PageOptions options,
+    }
+  ) async {
+    
+    // check if we are already login
+    if (!_state._isLogon && !action.noLogin) return Future.error("not account login");
+
+    // find match
+    Page curp = _state._pages.firstWhere((p) => p.match(action.url), orElse: () => null);
+    // if we found matched page, just do action
+    // TODO: check pages overload, try another page
+    if (curp != null) return curp.doAction(action);
+
+    // open a new page to do this action
+    return openPage(
+      action.url,
+      options: options,
+      onCreated: onCreated,
+      onLoadStart: onLoadStart,
+      onLoadStop: onLoadStop,
+      onLoadError: onLoadError,
+    ).then((Page page) {
+      return page.doAction(action);
     });
   }
 
-  /// 获取物流详情
-  Future<dynamic> getTradeDetail(String orderId, {Duration timeout: const Duration(seconds: 10)}) async {
-    Completer completer = Completer();
-    _widget._waitCompleters["trade_detail_$orderId"] = completer;
-    await _widget._webview2.evaluateJavascript(source: TaobaoJsCode.apiTradeDetail(orderId));
-    return completer.future.timeout(timeout, onTimeout: () {
-      _widget._waitCompleters.remove("order_detail_$orderId");
-      return Future.error("执行任务 $orderId 超时($timeout)");
-    });
-  }
+  Future<Page> openPage(
+    String url,
+    {
+      CreatedCallback onCreated,
+      LoadStartCallback onLoadStart,
+      LoadStopCallback onLoadStop,
+      LoadErrorCallback onLoadError,
+      PageOptions options,
+    }
+  ) {
 
-  /// 重置
-  void reset() {
-    /// TODO: 初始化变量
+    // NOTE: fix bug in getter null
+    if (options==null) options = PageOptions();
 
-    /// 重新加载
-    _webview.loadUrl(url: _widget.widget.loginPage);
-  }
+    // if (H5PageUrls.isLogin(url)) return Future.error("don't allow open login page");
 
-  /// debug
-  void toggleWebview({bool show}) {
-    _widget.toggleWebview(show: show);
-  }
-}
+    // TODO: reuse page with empty job queue, except which has keepalive
 
+    if (_state._pages.length>_state.widget.maxTab) {
+      // TODO: make a page can be turn to a new one
+      return Future.error("max tab ${_state.widget.maxTab}");
+    }
 
-class HackKeepAlive extends StatefulWidget {
+    if (options!=null && options.max > 0) {
+      List<Page> ps = _state._pages.where((p) => p.match(url)).toList();
+      if (ps.length >= options.max) {
+        // TODO: get the random page
+        if (options.refresh) ps[0].webviewController.reload(); // TODO: should replace onHandler?
+        return Future.value(ps[0]);
+      }
+    }
 
-  HackKeepAlive();
+    // get the new page's index
+    final _len = _state._pages.length;
 
-  @override
-  _HackKeepAliveState createState() => _HackKeepAliveState();
-}
+    // event filter page with id
 
-class _HackKeepAliveState extends State<HackKeepAlive> with AutomaticKeepAliveClientMixin {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 5,
-      height: 5,
-      child: InAppWebView(
-        initialUrl: TaobaoUrls.homePageMain,
-        initialOptions: InAppWebViewWidgetOptions(inAppWebViewOptions: InAppWebViewOptions(javaScriptEnabled: true)),
-      ),
+    // init the new page
+    Page page;
+    page = Page(
+      _len, url,
+      onWebViewCreated: (controller) {
+        emit(EventPageCreated(page));
+        onCreated?.call(controller);
+      },
+      onLoadStart: (controller, url) {
+        emit(EventPageLoadStart(page, url));
+        onLoadStart?.call(controller, url);
+      },
+      onLoadStop: (controller, url) {
+        emit(EventPageLoadStop(page, url));
+        onLoadStop?.call(controller, url);
+      },
+      onLoadError: (controller, url, code, message) {
+        emit(EventPageLoadError(page, url, code, message));
+        onLoadError?.call(controller, url, code, message);
+      },
+      options: options,
     );
+
+    print("[controller] open the ${_len+1} page");
+
+    // TODO: handle load page error, this page need be destroy
+
+    _state._addPage(page);
+
+    return Future.value(page);
   }
 
-  // Setting to true will force the tab to never be disposed. This could be dangerous.
-  @override
-  bool get wantKeepAlive => true;
+  // show special page
+  void showPage(Page page) {
+    // set with tab index and stack index
+    // for now just auto display with our hook
+    _state._changePage(page);
+  }
+
+  // show special page with url
+  void showPageWithUrl(String url) {
+    Page page = getPageWithUrl(url);
+    if (page!=null) return showPage(page);
+    print("can't found page with url: $url, maybe you should open it first.");
+  }
+
+  Page getPageWithUrl(String url) {
+    return _state._pages.firstWhere((element) => element.match(url), orElse: () => null);
+  }
+
+  // clean and reset
+  void reset() {
+    _state._reset();
+  }
 }
