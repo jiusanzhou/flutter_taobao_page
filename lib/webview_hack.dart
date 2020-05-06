@@ -45,7 +45,7 @@ class _WebviewHackState extends State<WebviewHack> {
     setState(() {
       _obscureText = data["type"] == "password";
 
-      _textStyle = st.copyWith(fontSize: st.fontSize - 2 );
+      _textStyle = st.copyWith(fontSize: st.fontSize - 0 );
     });
   }
 
