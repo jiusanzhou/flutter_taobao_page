@@ -82,9 +82,10 @@ class _TaobaoWebviewState extends State<TaobaoWebview> with AutomaticKeepAliveCl
           javaScriptEnabled: true,
           debuggingEnabled: false,
           contentBlockers: widget.blockers,
+          preferredContentMode: InAppWebViewUserPreferredContentMode.DESKTOP,
         ),
         androidInAppWebViewOptions: AndroidInAppWebViewOptions(
-          useWideViewPort: true,
+          useWideViewPort: false,
         ),
       ),
       onWebViewCreated: _onWebViewCreated,
