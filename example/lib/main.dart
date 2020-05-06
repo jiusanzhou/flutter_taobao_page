@@ -6,6 +6,7 @@ import 'package:flutter_taobao_page/event.dart';
 import 'package:flutter_taobao_page/hack.dart';
 import 'package:flutter_taobao_page/taobao/h5.dart';
 import 'package:flutter_taobao_page/taobao_page.dart';
+import 'package:flutter_taobao_page/util_keyboard.dart';
 
 void main() => runApp(MyApp());
 
@@ -29,7 +30,7 @@ class MyApp extends StatelessWidget {
         primaryColor: Colors.blue,
         primarySwatch: Colors.blue,
       ),
-      home: HomePage(title: '淘宝数据'),
+      home: HomePage(title: '淘宝'),
     );
   }
 }

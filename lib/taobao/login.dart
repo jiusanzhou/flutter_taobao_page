@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_taobao_page/login.dart';
 import 'package:flutter_taobao_page/taobao/h5.dart';
 import 'package:flutter_taobao_page/webview.dart';
+import 'package:flutter_taobao_page/webview_hack.dart';
 
 abstract class TaobaoLoginPage extends LoginPage {
   // all in one
@@ -44,39 +45,45 @@ class H5PasswordTaobaoLoginPage extends TaobaoLoginPage {
           //   )
           // ),
         ),
-        body: TaobaoWebview(
-          initialUrl: H5PageUrls.login,
-          onLoadStop: (controller, url) {
-            if (H5PageUrls.isLogin(url)) {
-              // has login page
-              print("[taobao page] has login page");
-              _isLogon = false;
-              onLoginPageOpend?.call(url);
+        body: WebviewHack(
+          builder: (context, hacker) {
+            return TaobaoWebview(
+              initialUrl: H5PageUrls.login,
+              onWebViewCreated: (controller) => hacker?.onWebViewCreated(controller),
+              onLoadStop: (controller, url) {
+                hacker?.onLoadStop(controller, url);
+                if (H5PageUrls.isLogin(url)) {
+                  // has login page
+                  print("[taobao page] has login page");
+                  _isLogon = false;
+                  onLoginPageOpend?.call(url);
 
-              // set password input to text
-              if (smsMode) {
-                Future.delayed(Duration(milliseconds: 50), () {
-                  controller.evaluateJavascript(source: """
-                  let i = document.querySelector('.sms-login-link'); i && i.click();''
-                  """);
-                });
-              }
+                  // set password input to text
+                  if (smsMode) {
+                    Future.delayed(Duration(milliseconds: 50), () {
+                      controller.evaluateJavascript(source: """
+                      let i = document.querySelector('.sms-login-link'); i && i.click();''
+                      """);
+                    });
+                  }
 
-              return;
-            }
+                  return;
+                }
 
-            if (H5PageUrls.isHome(url)) {
-              print("[taobao page] guess we have login success => $url");
-              _isLogon = true;
-              onUserLogon?.call(null);
-              Navigator.pop(context);
-            }
-          },
-          onProgressChanged: (_, v) {
-            // setState(() {
-            //   _progress = v / 100;
-            // });
-          },
+                if (H5PageUrls.isHome(url)) {
+                  print("[taobao page] guess we have login success => $url");
+                  _isLogon = true;
+                  onUserLogon?.call(null);
+                  Navigator.pop(context);
+                }
+              },
+              onProgressChanged: (_, v) {
+                // setState(() {
+                //   _progress = v / 100;
+                // });
+              },
+            );
+          }
         ),
       ),
     ));
