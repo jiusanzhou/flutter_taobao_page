@@ -193,7 +193,9 @@ return r.status === 200 ? JSON.parse(r.responseText) : null
 
   static String scaleViewPort() {
     return """var _meta = document.querySelector('head > meta[name=viewport]')
-if ( _meta ) _meta.setAttribute('content', 'width=device-width, initial-scale=0.5, maximum-scale=1.0, user-scalable=0');""";
+if ( _meta ) _meta.setAttribute('content', 'width=device-width, initial-scale=0.4, maximum-scale=1.0, user-scalable=0');
+window.scroll(0, 0); // scroll to left 0 top 0
+""";
   }
 }
 
