@@ -5,8 +5,6 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
-import 'package:flutter_taobao_page/util_keyboard.dart';
-import 'package:keyboard_visibility/keyboard_visibility.dart';
 
 // listen event on fouce
 // dispath the event from html
@@ -78,12 +76,12 @@ class _WebviewHackState extends State<WebviewHack> {
 
     _controller = WebviewHackController(this);
 
-    KeyboardVisibilityNotification().addNewListener(
-      onChange: (bool visible) {
-        var h = MediaQuery.of(context).viewInsets.bottom;
-        print("================> 键盘${visible?"弹":"缩"}起来了 ($h) <<<<<<");
-      },
-    );
+    // KeyboardVisibilityNotification().addNewListener(
+    //   onChange: (bool visible) {
+    //     var h = MediaQuery.of(context).viewInsets.bottom;
+    //     print("================> 键盘${visible?"弹":"缩"}起来了 ($h) <<<<<<");
+    //   },
+    // );
   }
 
   @override
