@@ -48,8 +48,12 @@ class H5PasswordTaobaoLoginPage extends TaobaoLoginPage {
         body: WebviewHack(
           builder: (context, hacker) {
             return TaobaoWebview(
+              useMobile: true,
               initialUrl: H5PageUrls.login,
               onWebViewCreated: (controller) => hacker?.onWebViewCreated(controller),
+              onLoadStart: (controller, url) {
+                hacker?.onLoadStart(controller, url);
+              },
               onLoadStop: (controller, url) {
                 hacker?.onLoadStop(controller, url);
                 if (H5PageUrls.isLogin(url)) {

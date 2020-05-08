@@ -39,6 +39,7 @@ class _WebviewHackState extends State<WebviewHack> {
 
   TextStyle _textStyle;
 
+  final FocusNode _inputFocus = FocusNode();
   TextEditingController _inputController = TextEditingController();
 
   _updateStyle(TextStyle st, Map<String, dynamic> data) {
@@ -70,6 +71,22 @@ class _WebviewHackState extends State<WebviewHack> {
     });
   }
 
+  _displayInput(bool v) {
+    if (!v) {
+      // 隐藏fake
+        setState(() {
+        _display = false;
+        _textStyle = _textStyle?.copyWith(color: Colors.transparent);
+        });
+    } else {
+      // 显示fake
+        setState(() {
+        _display = true;
+        _textStyle = _textStyle?.copyWith(color: Colors.black);
+      });
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -82,6 +99,17 @@ class _WebviewHackState extends State<WebviewHack> {
     //     print("================> 键盘${visible?"弹":"缩"}起来了 ($h) <<<<<<");
     //   },
     // );
+
+    _inputFocus.addListener(() {
+      print("获得焦点 ${_inputFocus.hasFocus}");
+
+      // 如果失去焦点，就隐藏 fake
+      if (!_inputFocus.hasFocus) {
+        // 隐藏fake, 显示html
+        _displayInput(false);
+        _controller.hiddenInput(false);
+      }
+    });
   }
 
   @override
@@ -102,19 +130,20 @@ class _WebviewHackState extends State<WebviewHack> {
           child: Container(
             // color: Colors.blueAccent,
             padding: EdgeInsets.symmetric(horizontal: 5), // TODO: FIXME hardcode
-            child: TextField(
+            child: _display?TextField(
               cursorColor: Colors.black,
               cursorWidth: 1,
               autofocus: true, /// don't works well
               style: _textStyle,
               controller: _inputController,
               obscureText: _obscureText,
+              focusNode: _inputFocus,
               decoration: InputDecoration(border: InputBorder.none),
               onChanged: (v) {
                 // set value to element
                 _controller.setValueToInput(v);
               },
-            )
+            ):null
           )
         ),
       ],
@@ -165,27 +194,33 @@ class WebviewHackController {
   String _fakeInputID = "";
 
   final _onfocusjs = """
-    var _ins = document.querySelectorAll("input"); // focus
-    var __inputelement;
-    // touchstart
-    _ins.forEach((e) => e.addEventListener("touchend", function(i) {
-      // rect, style
-      __inputelement = i.target;
-      // __inputelement.setAttribute("zoe-fake-input", setTimeout(function(){}))
-      var __style = getComputedStyle(i.target);
-      var __tmpstyle = {
-        fontSize: parseFloat(__style.fontSize),
-      };
-      _callhackerback("input_fouce", "", {
-        "rect": __inputelement.getBoundingClientRect().toJSON(),
-        "style": __tmpstyle,
-        "value": __inputelement.value,
-        "type": __inputelement.getAttribute("type"),
-        "screen": { width: screen.availWidth, height: screen.availHeight },
-      });
-      i.preventDefault();
-    }, true));
-    '_____onfoucejs count:' + _ins.length
+    var _sbonfocus = setInterval(function(){
+      // var _ins = document.querySelectorAll("input"); // focus
+      if (!document || document.readyState!=="complete") return;
+      clearInterval(_sbonfocus);
+      var _ins = [document];
+      // touchstart
+      _ins.forEach((e) => e.addEventListener("touchend", function(i) {
+        if (i.target.tagName !== "INPUT") return;
+        // rect, style
+        if (window.__inputelement) window.__inputelement.style.color = "#000"; //  恢复颜色
+        window.__inputelement = i.target;
+        // i.target.setAttribute("zoe-fake-input", setTimeout(function(){}))
+        var __style = getComputedStyle(i.target);
+        var __tmpstyle = {
+          fontSize: parseFloat(__style.fontSize),
+        };
+        _callhackerback("input_fouce", "", {
+          "rect": __inputelement.getBoundingClientRect().toJSON(),
+          "style": __tmpstyle,
+          "value": i.target.value,
+          "type": i.target.getAttribute("type"),
+          "screen": { width: screen.availWidth, height: screen.availHeight },
+        });
+        i.preventDefault();
+      }, true));
+    },500);
+    '_____onfoucejs'
   """;
 
   final _onscrolljs = """
@@ -196,23 +231,26 @@ class WebviewHackController {
     '_____onscrolljs'
   """;
 
-  void onLoadStop(InAppWebViewController controller, String url) {
-    print("webview hacker, webviwe finish url: $url");
-
+  void onLoadStart(InAppWebViewController controller, String url) {
+    print("webview hacker, webviwe start url: $url");
     // must install, js can call  _callhackerback(...args);
     controller.evaluateJavascript(source: _installcallback()).then((value) => print("执行成功 => $value"));
 
     // 安装监听事件, 设置定时器重复执行, 什么时候去执行呢?
     controller.evaluateJavascript(source: _onfocusjs).then((value) => print("执行成功 => $value"));
-
     controller.evaluateJavascript(source: _onscrolljs).then((value) => print("执行成功 => $value"));
+
+  }
+
+  void onLoadStop(InAppWebViewController controller, String url) {
+    print("webview hacker, webviwe finish url: $url");
   }
 
   Rect _orginalRect;
 
   dynamic _onInputFouce(List<dynamic> args) {
     String path = args[0];
-    print("=======> ${args[1]}");
+    print("==== 点击了 input ===> ${args[1]}");
     var data = json.decode(args[1]);
     _orginalRect = Rect.fromJson(data["rect"]);
     _state._updatePosAndSize(_orginalRect.left, _orginalRect.top, width: _orginalRect.width, height: _orginalRect.height);
@@ -221,6 +259,12 @@ class WebviewHackController {
 
     _state._updateValue(data["value"]);
     // 保存 hacker id, 便于找到唯一 element
+
+
+    // 这里去显示fake，hidden real
+
+    hiddenInput(true);
+
     return "";
   }
 
@@ -233,6 +277,14 @@ class WebviewHackController {
     var code = """
     __inputelement.value = "$v"; '____setvaluetoinput'
     """;
+    _webcontroller.evaluateJavascript(source: code).then((value) => print("执行成功 => $value"));
+  }
+
+  hiddenInput(bool v) {
+    var code = """
+__inputelement.style.color = "${v?"transparent":"#000"}";
+    """;
+
     _webcontroller.evaluateJavascript(source: code).then((value) => print("执行成功 => $value"));
   }
 }
@@ -248,20 +300,29 @@ class Rect {
   double left;
 
   Rect.fromJson(Map<String, dynamic> data) {
-    x = (data["x"] as int).toDouble();
-    y = (data["y"] as int).toDouble();
-    width = (data["width"] as int).toDouble();
-    height = (data["height"] as int).toDouble();
-    top = (data["top"] as int).toDouble();
-    right = (data["right"] as int).toDouble();
-    left = (data["left"] as int).toDouble();
+    x = checkDouble(data["x"]).toDouble();
+    y = checkDouble(data["y"]).toDouble();
+    width = checkDouble(data["width"]).toDouble();
+    height = checkDouble(data["height"]).toDouble();
+    top = checkDouble(data["top"]).toDouble();
+    right = checkDouble(data["right"]).toDouble();
+    left = checkDouble(data["left"]).toDouble();
+  }
+
+  static double checkDouble(dynamic value) {
+    if (value is String) {
+      return double.parse(value);
+    } else if (value is int) {
+      return value.toDouble();
+    } else {
+      return value;
+    }
   }
 }
 
 TextStyle getTextStyleFromJson(Map<String, dynamic> data) {
   TextStyle t = TextStyle(
     fontSize: (data["fontSize"] as int).toDouble(),
-    color: Colors.transparent, // important!!!!!
   );
   return t;
 }

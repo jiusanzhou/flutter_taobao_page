@@ -25,10 +25,13 @@ class TaobaoWebview extends StatefulWidget {
 
   final String initialUrl;
 
+  final bool useMobile;
+
   final List<ContentBlocker> blockers;
 
   TaobaoWebview({
     this.initialUrl: "about:blank",
+    this.useMobile: false,
 
     this.onWebViewCreated,
     this.onLoadStart,
@@ -82,7 +85,7 @@ class _TaobaoWebviewState extends State<TaobaoWebview> with AutomaticKeepAliveCl
           javaScriptEnabled: true,
           debuggingEnabled: false,
           contentBlockers: widget.blockers,
-          preferredContentMode: InAppWebViewUserPreferredContentMode.DESKTOP,
+          preferredContentMode: widget.useMobile?InAppWebViewUserPreferredContentMode.MOBILE:InAppWebViewUserPreferredContentMode.DESKTOP,
         ),
         androidInAppWebViewOptions: AndroidInAppWebViewOptions(
           useWideViewPort: false,
