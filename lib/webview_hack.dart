@@ -130,10 +130,10 @@ class _WebviewHackState extends State<WebviewHack> {
           child: Container(
             // color: Colors.blueAccent,
             padding: EdgeInsets.symmetric(horizontal: 5), // TODO: FIXME hardcode
-            child: _display?TextField(
+            child: TextField(
               cursorColor: Colors.black,
               cursorWidth: 1,
-              autofocus: true, /// don't works well
+              autofocus: false, /// don't works well
               style: _textStyle,
               controller: _inputController,
               obscureText: _obscureText,
@@ -143,7 +143,7 @@ class _WebviewHackState extends State<WebviewHack> {
                 // set value to element
                 _controller.setValueToInput(v);
               },
-            ):null
+            )
           )
         ),
       ],
@@ -167,6 +167,7 @@ class WebviewHackController {
     print("webview hacker, webviwe created");
     controller.addJavaScriptHandler(handlerName: "input_fouce", callback: _onInputFouce);
     controller.addJavaScriptHandler(handlerName: "scroll", callback: _onScroll);
+    controller.addJavaScriptHandler(handlerName: "echo", callback: _onEcho);
   }
 
 
@@ -196,12 +197,20 @@ class WebviewHackController {
   final _onfocusjs = """
     var _sbonfocus = setInterval(function(){
       // var _ins = document.querySelectorAll("input"); // focus
-      if (!document || document.readyState!=="complete") return;
+      if (!document) return;
       clearInterval(_sbonfocus);
       var _ins = [document];
       // touchstart
       _ins.forEach((e) => e.addEventListener("touchend", function(i) {
+        // _callhackerback("echo", i.target.tagName);
+
+        if (i.target.tagName === "FORM") {
+          i.preventDefault();
+          return;
+        }
+
         if (i.target.tagName !== "INPUT") return;
+
         // rect, style
         if (window.__inputelement) window.__inputelement.style.color = "#000"; //  恢复颜色
         window.__inputelement = i.target;
@@ -271,6 +280,12 @@ class WebviewHackController {
   dynamic _onScroll(List<dynamic> args) {
     Rect rect = Rect.fromJson(json.decode(args[1]));
     _state._updatePosAndSize(rect.left, rect.top);
+    return "";
+  }
+
+  dynamic _onEcho(List<dynamic> args) {
+    print("[ECHO] ===> $args");
+    return "";
   }
 
   setValueToInput(String v) {
