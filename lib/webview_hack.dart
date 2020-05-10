@@ -53,6 +53,9 @@ class _WebviewHackState extends State<WebviewHack> {
   _updateValue(String value) {
     setState(() {
       _inputController.text = value;
+      _inputController.selection = TextSelection.fromPosition(TextPosition(offset: value.length));
+      
+      // _inputController.selection = _inputController.selection.copyWith(baseOffset: value.length);
     });
   }
 
@@ -73,14 +76,14 @@ class _WebviewHackState extends State<WebviewHack> {
 
   _displayInput(bool v) {
     if (!v) {
-      // 隐藏fake
-        setState(() {
+      // 隐藏fake, 最好把他移走
+      setState(() {
         _display = false;
         _textStyle = _textStyle?.copyWith(color: Colors.transparent);
-        });
+      });
     } else {
       // 显示fake
-        setState(() {
+      setState(() {
         _display = true;
         _textStyle = _textStyle?.copyWith(color: Colors.black);
       });
@@ -105,7 +108,7 @@ class _WebviewHackState extends State<WebviewHack> {
 
       // 如果失去焦点，就隐藏 fake
       if (!_inputFocus.hasFocus) {
-        // 隐藏fake, 显示html
+        // 隐藏fake, 显示html,最好把他移走
         _displayInput(false);
         _controller.hiddenInput(false);
       }
@@ -128,7 +131,7 @@ class _WebviewHackState extends State<WebviewHack> {
           height: _sizeHeight,
           width: _sizeWidth == null ? null : _sizeWidth - 60, // TODO: FIXME hardcode
           child: Container(
-            // color: Colors.blueAccent,
+            color: Colors.blueAccent[300],
             padding: EdgeInsets.symmetric(horizontal: 5), // TODO: FIXME hardcode
             child: TextField(
               cursorColor: Colors.black,
@@ -171,12 +174,6 @@ class WebviewHackController {
   }
 
 
-  /// flow: onfouce => set .... =>
-  /// 
-  /// 
-  /// 
-
-
   String _installcallback() {
 
     String code;
@@ -194,42 +191,81 @@ class WebviewHackController {
 
   String _fakeInputID = "";
 
-  final _onfocusjs = """
-    var _sbonfocus = setInterval(function(){
-      // var _ins = document.querySelectorAll("input"); // focus
-      if (!document) return;
-      clearInterval(_sbonfocus);
-      var _ins = [document];
-      // touchstart
-      _ins.forEach((e) => e.addEventListener("touchend", function(i) {
-        // _callhackerback("echo", i.target.tagName);
+  final _onprocesshandlejs = """
+  window.__onprocesshandler = function(event) {
+    let i = event;
 
-        if (i.target.tagName === "FORM") {
-          i.preventDefault();
-          return;
-        }
+    // 调试打印
+    _callhackerback("echo", "TAG: " + i.target.tagName + " <=== on touched");
 
-        if (i.target.tagName !== "INPUT") return;
+    // FORM 需要取消事件，防止边缘触发
+    if (i.target.tagName === "FORM") {
+      i.preventDefault();
+      return;
+    }
 
-        // rect, style
-        if (window.__inputelement) window.__inputelement.style.color = "#000"; //  恢复颜色
-        window.__inputelement = i.target;
-        // i.target.setAttribute("zoe-fake-input", setTimeout(function(){}))
-        var __style = getComputedStyle(i.target);
-        var __tmpstyle = {
-          fontSize: parseFloat(__style.fontSize),
-        };
-        _callhackerback("input_fouce", "", {
-          "rect": __inputelement.getBoundingClientRect().toJSON(),
-          "style": __tmpstyle,
-          "value": i.target.value,
-          "type": i.target.getAttribute("type"),
-          "screen": { width: screen.availWidth, height: screen.availHeight },
-        });
-        i.preventDefault();
-      }, true));
+    // 非 INPUT 输入框 就不处理
+    if (i.target.tagName !== "INPUT") return;
+
+    // 硬编码: 目前只处理淘宝帐号/密码的输入框
+    if (i.target.id !== "fm-login-password" && i.target.id !== "fm-login-id") return;
+
+    // 取得INPUT的完整样式
+    var __style = getComputedStyle(i.target);
+
+    // 如果原来有节点保存，将其颜色恢复, 这里懒得备份用当前节点的颜色
+    if (window.__inputelement) window.__inputelement.style.color = __style.color;
+
+    // 生成需要的样式
+    var __tmpstyle = {
+      fontSize: parseFloat(__style.fontSize), // 目前只返回字体大小
+    };
+
+    // 保存节点，以便接受控制
+    window.__inputelement = i.target;
+
+    // 报告事件: ID目前没有设置，使用全局变量保存当前节点
+    _callhackerback("input_fouce", "", {
+      "rect": __inputelement.getBoundingClientRect().toJSON(), // 大小和位置
+      "style": __tmpstyle, // 样式
+      "value": i.target.value, // 数据值
+      "type": i.target.getAttribute("type"), // 表单类型
+      "screen": { width: screen.availWidth, height: screen.availHeight }, // 屏幕大小
+    });
+
+    // 停止事件
+    i.preventDefault();
+  };
+  '_____install process handler'
+  """;
+
+  final _onclickinputjs = """
+    var _sbclickinput = setInterval(function(){
+      var _ins = document.querySelectorAll("input"); // focus
+      if (_ins.length === 0) return;
+
+      clearInterval(_sbclickinput);
+
+      _callhackerback("echo", "给所有 input (" + _ins.length + ") 添加 事件监听");
+
+      _ins.forEach(function(e) {
+        e.addEventListener("touchend", __onprocesshandler, true)
+      });
     },500);
-    '_____onfoucejs'
+    '________clickinputjs'
+  """;
+
+  final _onclickdocumentjs = """
+    var _sbclickdocument = setInterval(function(){
+      if (!document) return;
+      clearInterval(_sbclickdocument);
+
+      _callhackerback("echo", "给 document 添加 事件监听");
+
+      // touchstart
+      document.addEventListener("touchend", __onprocesshandler, true);
+    }, 500);
+    '_____onclickdocumentjs'
   """;
 
   final _onscrolljs = """
@@ -243,16 +279,26 @@ class WebviewHackController {
   void onLoadStart(InAppWebViewController controller, String url) {
     print("webview hacker, webviwe start url: $url");
     // must install, js can call  _callhackerback(...args);
+
+    // 安装回调工具函数
     controller.evaluateJavascript(source: _installcallback()).then((value) => print("执行成功 => $value"));
 
-    // 安装监听事件, 设置定时器重复执行, 什么时候去执行呢?
-    controller.evaluateJavascript(source: _onfocusjs).then((value) => print("执行成功 => $value"));
+    // 安装滚动事件触发监听
     controller.evaluateJavascript(source: _onscrolljs).then((value) => print("执行成功 => $value"));
 
+    // 安装点击/fouce处理函数
+    controller.evaluateJavascript(source: _onprocesshandlejs).then((value) => print("执行成功 => $value"));
+
+    // 安装点击/fouce监听
+    // 在start中可以监听document来处理
+    controller.evaluateJavascript(source: _onclickdocumentjs).then((value) => print("执行成功 => $value"));
   }
 
   void onLoadStop(InAppWebViewController controller, String url) {
     print("webview hacker, webviwe finish url: $url");
+    // 安装点击/fouce监听
+    // 查找到所有的input表单进行处理
+    controller.evaluateJavascript(source: _onclickinputjs).then((value) => print("执行成功 => $value"));
   }
 
   Rect _orginalRect;
@@ -267,10 +313,6 @@ class WebviewHackController {
     _state._updateStyle(getTextStyleFromJson(data["style"]), data);
 
     _state._updateValue(data["value"]);
-    // 保存 hacker id, 便于找到唯一 element
-
-
-    // 这里去显示fake，hidden real
 
     hiddenInput(true);
 
@@ -280,6 +322,8 @@ class WebviewHackController {
   dynamic _onScroll(List<dynamic> args) {
     Rect rect = Rect.fromJson(json.decode(args[1]));
     _state._updatePosAndSize(rect.left, rect.top);
+
+    print("[SCROLL] ======> ${json.encode(rect)}");
     return "";
   }
 
