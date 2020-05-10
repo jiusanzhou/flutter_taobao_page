@@ -85,6 +85,7 @@ class H5PasswordTaobaoLoginPage extends TaobaoLoginPage {
                 // setState(() {
                 //   _progress = v / 100;
                 // });
+                hacker?.onProcessChange(_, v);
               },
             );
           }

@@ -179,12 +179,12 @@ class WebviewHackController {
     String code;
 
     if (Platform.isAndroid) {
-      code = "flutter_inappwebview._callHandler(args[0], setTimeout(function(){}), JSON.stringify(args.slice(1).map(e=>JSON.stringify(e))))";
+      code = "flutter_inappwebview._callHandler(args[0], setTimeout(function(){}), JSON.stringify(args.slice(1).map(function(e){return JSON.stringify(e)})))";
     } else {
       code = "flutter_inappwebview.callHandler(...args)";
     }
 
-    return "window._callhackerback = function(...args) { return $code }; '_____hackerback'";
+    return """var _callhackerback = function(...args) { return $code }; '_____installbackchannel'""";
   }
 
   final _fakeInputName = "zoe-fake-input";
@@ -240,13 +240,14 @@ class WebviewHackController {
   """;
 
   final _onclickinputjs = """
+    // try{flutter_inappwebview._callHandler("echo", "xxxx", JSON.stringify(["测试执行 ===>"]));}catch(e) {alert(e)}
     var _sbclickinput = setInterval(function(){
       var _ins = document.querySelectorAll("input"); // focus
       if (_ins.length === 0) return;
 
       clearInterval(_sbclickinput);
 
-      _callhackerback("echo", "给所有 input (" + _ins.length + ") 添加 事件监听");
+      // _callhackerback("echo", "给所有 input (" + _ins.length + ") 添加 事件监听");
 
       _ins.forEach(function(e) {
         e.addEventListener("touchend", __onprocesshandler, true)
@@ -260,7 +261,7 @@ class WebviewHackController {
       if (!document) return;
       clearInterval(_sbclickdocument);
 
-      _callhackerback("echo", "给 document 添加 事件监听");
+      // _callhackerback("echo", "给 document 添加 事件监听");
 
       // touchstart
       document.addEventListener("touchend", __onprocesshandler, true);
@@ -296,9 +297,24 @@ class WebviewHackController {
 
   void onLoadStop(InAppWebViewController controller, String url) {
     print("webview hacker, webviwe finish url: $url");
+
+    // 安装回调工具函数
+    controller.evaluateJavascript(source: _installcallback()).then((value) => print("执行成功 => $value"));
+
+    // 安装滚动事件触发监听
+    controller.evaluateJavascript(source: _onscrolljs).then((value) => print("执行成功 => $value"));
+
+    // 安装点击/fouce处理函数
+    controller.evaluateJavascript(source: _onprocesshandlejs).then((value) => print("执行成功 => $value"));
+
     // 安装点击/fouce监听
     // 查找到所有的input表单进行处理
     controller.evaluateJavascript(source: _onclickinputjs).then((value) => print("执行成功 => $value"));
+  }
+
+  bool runned = false;
+  void onProcessChange(InAppWebViewController controller, int process) {
+    print("[LOADING] ====> $process");
   }
 
   Rect _orginalRect;
@@ -323,7 +339,7 @@ class WebviewHackController {
     Rect rect = Rect.fromJson(json.decode(args[1]));
     _state._updatePosAndSize(rect.left, rect.top);
 
-    print("[SCROLL] ======> ${json.encode(rect)}");
+    print("[SCROLL] ======> ${rect.y}");
     return "";
   }
 
@@ -341,7 +357,7 @@ class WebviewHackController {
 
   hiddenInput(bool v) {
     var code = """
-__inputelement.style.color = "${v?"transparent":"#000"}";
+    __inputelement.style.color = "${v?"transparent":"#000"}";
     """;
 
     _webcontroller.evaluateJavascript(source: code).then((value) => print("执行成功 => $value"));
