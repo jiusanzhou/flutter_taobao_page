@@ -80,6 +80,9 @@ class _WebviewHackState extends State<WebviewHack> {
       setState(() {
         _display = false;
         _textStyle = _textStyle?.copyWith(color: Colors.transparent);
+
+        print("隐藏键盘后移动走");
+        _posTop = -100;
       });
     } else {
       // 显示fake

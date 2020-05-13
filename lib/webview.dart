@@ -89,6 +89,7 @@ class _TaobaoWebviewState extends State<TaobaoWebview> with AutomaticKeepAliveCl
         ),
         androidInAppWebViewOptions: AndroidInAppWebViewOptions(
           useWideViewPort: false,
+          domStorageEnabled: true,
         ),
       ),
       onWebViewCreated: _onWebViewCreated,
