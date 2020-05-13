@@ -8,6 +8,21 @@ abstract class TaobaoLoginPage extends LoginPage {
   // all in one
 }
 
+class AccountInfo {
+
+  String login;
+  String nickname;
+  String password;
+  bool smsMode;
+
+  AccountInfo.fromJson(Map<String, dynamic> config) {
+    login = config["login"] ?? "";
+    login = config["nickname"] ?? "";
+    login = config["password"] ?? "";
+    smsMode = config["smsMode"] == null ? false : config["smsMode"];
+  }
+}
+
 class H5PasswordTaobaoLoginPage extends TaobaoLoginPage {
 
   final void Function(dynamic data) onUserLogon;
@@ -25,7 +40,8 @@ class H5PasswordTaobaoLoginPage extends TaobaoLoginPage {
     _progress = 0;
   }
   
-  open(BuildContext context, { bool smsMode = true }) {
+  open(BuildContext context, { bool smsMode = true, Map<String, dynamic> config }) {
+
     // open a new web page
     Navigator.push(context, MaterialPageRoute(
       builder: (context) => Scaffold(
@@ -38,12 +54,6 @@ class H5PasswordTaobaoLoginPage extends TaobaoLoginPage {
           actions: <Widget>[
             FlatButton(onPressed: () => Navigator.of(context).pop(null), child: Text("完成", style: TextStyle(color: Colors.white))),
           ],
-          // bottom: PreferredSize(
-          //   preferredSize: Size.fromHeight(4.0),
-          //   child: Container(
-          //     child: _progress < 1.0 ? LinearProgressIndicator(value: _progress) : Container(),
-          //   )
-          // ),
         ),
         body: WebviewHack(
           builder: (context, hacker) {
@@ -61,6 +71,23 @@ class H5PasswordTaobaoLoginPage extends TaobaoLoginPage {
                   print("[taobao page] has login page");
                   _isLogon = false;
                   onLoginPageOpend?.call(url);
+
+                  // 在这里搞事情
+                  if (config != null) {
+
+                    print("自动填充帐号登录信息");
+                    AccountInfo info = AccountInfo.fromJson(config);
+
+                    // 填入帐号密码等信息
+                    Future.delayed(Duration(milliseconds: 50), () {
+                      controller.evaluateJavascript(source: """
+                      let i;
+                      i = document.querySelector('#fm-login-id'); i.value="${info.login}";
+                      i = document.querySelector('#fm-login-password'); i.value="${info.password}";
+                      '_____'
+                      """).then((value) => print("执行成功: $value"));
+                    });
+                  }
 
                   // set password input to text
                   if (smsMode) {
