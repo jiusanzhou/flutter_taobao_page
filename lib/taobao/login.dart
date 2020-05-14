@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_taobao_page/login.dart';
 import 'package:flutter_taobao_page/taobao/h5.dart';
@@ -17,8 +19,8 @@ class AccountInfo {
 
   AccountInfo.fromJson(Map<String, dynamic> config) {
     login = config["login"] ?? "";
-    login = config["nickname"] ?? "";
-    login = config["password"] ?? "";
+    nickname = config["nickname"] ?? "";
+    password = config["password"] ?? "";
     smsMode = config["smsMode"] == null ? false : config["smsMode"];
   }
 }
@@ -40,7 +42,7 @@ class H5PasswordTaobaoLoginPage extends TaobaoLoginPage {
     _progress = 0;
   }
   
-  open(BuildContext context, { bool smsMode = true, Map<String, dynamic> config }) {
+  open(BuildContext context, { bool smsMode = true, Map<String, dynamic> config, Function(Map<String, dynamic> data) onLoginSubmit }) {
 
     // open a new web page
     Navigator.push(context, MaterialPageRoute(
@@ -60,7 +62,17 @@ class H5PasswordTaobaoLoginPage extends TaobaoLoginPage {
             return TaobaoWebview(
               useMobile: true,
               initialUrl: H5PageUrls.login,
-              onWebViewCreated: (controller) => hacker?.onWebViewCreated(controller),
+              onWebViewCreated: (controller) {
+                hacker?.onWebViewCreated(controller);
+
+                // 注册一个用于通信的channel
+                controller.addJavaScriptHandler(handlerName: "login_submit", callback: (args) {
+                  // 反序列化第一个, 自行确保参数正确
+                  print("收到  登录请求 => ${args[0]}");
+                  onLoginSubmit?.call(json.decode(args[0]));
+                  return "";
+                });
+              },
               onLoadStart: (controller, url) {
                 hacker?.onLoadStart(controller, url);
               },
@@ -72,29 +84,81 @@ class H5PasswordTaobaoLoginPage extends TaobaoLoginPage {
                   _isLogon = false;
                   onLoginPageOpend?.call(url);
 
-                  // 在这里搞事情
-                  if (config != null) {
+                  AccountInfo info = config!=null?AccountInfo.fromJson(config):null;
+                  
 
-                    print("自动填充帐号登录信息");
-                    AccountInfo info = AccountInfo.fromJson(config);
-
-                    // 填入帐号密码等信息
-                    Future.delayed(Duration(milliseconds: 50), () {
-                      controller.evaluateJavascript(source: """
-                      let i;
-                      i = document.querySelector('#fm-login-id'); i.value="${info.login}";
-                      i = document.querySelector('#fm-login-password'); i.value="${info.password}";
-                      '_____'
-                      """).then((value) => print("执行成功: $value"));
-                    });
-                  }
-
-                  // set password input to text
-                  if (smsMode) {
+                  // 如果是短信模式，切换至
+                  if (smsMode || (info != null && info.smsMode)) {
                     Future.delayed(Duration(milliseconds: 50), () {
                       controller.evaluateJavascript(source: """
                       let i = document.querySelector('.sms-login-link'); i && i.click();''
                       """);
+                    });
+                  }
+
+                  // 在这里去绑定时间，点击登录按钮后把表单内内容拿到
+                  controller.evaluateJavascript(source: """
+                  // 给登录按钮注册点击事件通知登录输入的信息
+                  let _installsubmit = function() {
+                    let _submitbtn = document.querySelector("#login-form > div.fm-btn > button");
+                    if (_submitbtn != null) {
+                      _submitbtn.addEventListener("click", function(){
+                        // 查询所有表单
+                        let data = {};
+                        document.querySelectorAll('input').forEach(function(item) {
+                          // 处理表单值
+                          if (item.id === "fm-sms-login-id") {
+                            data["phone"] = item.value;
+                            data["smsMode"] = true;
+                          } else if (item.id === "fm-login-id") {
+                            // 账户名
+                            data["phone"] = item.value;
+                          } else if (item.id === "fm-login-password") {
+                            // 保存密码
+                            data["password"] = item.value;
+                          }
+                        });
+
+                        // 向上通知
+                        flutter_inappwebview._callHandler("login_submit", setTimeout(function(){}), JSON.stringify([JSON.stringify(data)]));
+                      })
+                    }
+                  }
+                  '_____submithandle'
+                  """).then((value) => print("安装监听执行成功: $value"));
+
+                  // 这里去自动填充表单
+                  if (info != null) {
+                    print("自动填充帐号登录信息 $config");
+
+                    // 短信模式和普通模式不一样的表单, 短信模式实现自己点击发送短信按钮
+                    String code = info.smsMode?"""
+                      // 刚切换完，不一定马上就渲染出来了，所有需要定时处理
+                      let _smstimer = setInterval(function() {
+                        let i = document.querySelector('#fm-sms-login-id');
+                        if (!i) return; // 未渲染完成
+                        clearInterval(_smstimer); // 清楚定时器
+                        i.value="${info.login}";
+                        _installsubmit(); // 注册登录按钮点击事件
+                        setTimeout(function() {
+                          document.querySelector(".send-btn-link").click(); // 点击获取短信验证码
+                        }, 500)
+                      }, 100);
+                      '___短信模式插入'
+                    """:"""
+                      let i;
+                      i = document.querySelector('#fm-login-id'); i.value="${info.login}";
+                      i = document.querySelector('#fm-login-password'); i.value="${info.password}";
+                      _installsubmit(); // 注册登录按钮点击事件
+                      setTimeout(function() {
+                        document.querySelector("#login-form > div.fm-btn > button").click(); // 点击登录按钮
+                      }, 500)
+                      '___普通模式插入'
+                    """;
+
+                    // 执行
+                    Future.delayed(Duration(milliseconds: 50), () {
+                      controller.evaluateJavascript(source: code).then((value) => print("填充密码执行成功: $value"));
                     });
                   }
 
@@ -109,9 +173,6 @@ class H5PasswordTaobaoLoginPage extends TaobaoLoginPage {
                 }
               },
               onProgressChanged: (_, v) {
-                // setState(() {
-                //   _progress = v / 100;
-                // });
                 hacker?.onProcessChange(_, v);
               },
             );
