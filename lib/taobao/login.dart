@@ -101,18 +101,19 @@ class H5PasswordTaobaoLoginPage extends TaobaoLoginPage {
                   // 给登录按钮注册点击事件通知登录输入的信息
                   let _installsubmit = function() {
                     let _submitbtn = document.querySelector("#login-form > div.fm-btn > button");
-                    if (_submitbtn != null) {
+                    if (_submitbtn != null && !_submitbtn.getAttribute('_bind_click')) {
+                      _submitbtn.setAttribute("_bind_click", true)
                       _submitbtn.addEventListener("click", function(){
                         // 查询所有表单
                         let data = {};
                         document.querySelectorAll('input').forEach(function(item) {
                           // 处理表单值
                           if (item.id === "fm-sms-login-id") {
-                            data["phone"] = item.value;
+                            data["login"] = item.value;
                             data["smsMode"] = true;
                           } else if (item.id === "fm-login-id") {
                             // 账户名
-                            data["phone"] = item.value;
+                            data["login"] = item.value;
                           } else if (item.id === "fm-login-password") {
                             // 保存密码
                             data["password"] = item.value;
@@ -124,6 +125,9 @@ class H5PasswordTaobaoLoginPage extends TaobaoLoginPage {
                       })
                     }
                   }
+
+                  // 启动定时器，100ms查询一次是否绑定
+                  setInterval(_installsubmit, 100);
                   '_____submithandle'
                   """).then((value) => print("安装监听执行成功: $value"));
 
@@ -139,7 +143,6 @@ class H5PasswordTaobaoLoginPage extends TaobaoLoginPage {
                         if (!i) return; // 未渲染完成
                         clearInterval(_smstimer); // 清楚定时器
                         i.value="${info.login}";
-                        _installsubmit(); // 注册登录按钮点击事件
                         setTimeout(function() {
                           document.querySelector(".send-btn-link").click(); // 点击获取短信验证码
                         }, 500)
@@ -149,7 +152,6 @@ class H5PasswordTaobaoLoginPage extends TaobaoLoginPage {
                       let i;
                       i = document.querySelector('#fm-login-id'); i.value="${info.login}";
                       i = document.querySelector('#fm-login-password'); i.value="${info.password}";
-                      _installsubmit(); // 注册登录按钮点击事件
                       setTimeout(function() {
                         document.querySelector("#login-form > div.fm-btn > button").click(); // 点击登录按钮
                       }, 500)
@@ -161,8 +163,6 @@ class H5PasswordTaobaoLoginPage extends TaobaoLoginPage {
                       controller.evaluateJavascript(source: code).then((value) => print("填充密码执行成功: $value"));
                     });
                   }
-
-                  return;
                 }
 
                 if (H5PageUrls.isHome(url)) {
