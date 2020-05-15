@@ -39,8 +39,16 @@ class _WebviewHackState extends State<WebviewHack> {
 
   TextStyle _textStyle;
 
+  bool _loading = true;
+
   final FocusNode _inputFocus = FocusNode();
   TextEditingController _inputController = TextEditingController();
+
+  _onLoadFinish() {
+    setState(() {
+      _loading = false;
+    });
+  }
 
   _updateStyle(TextStyle st, Map<String, dynamic> data) {
     setState(() {
@@ -152,6 +160,13 @@ class _WebviewHackState extends State<WebviewHack> {
             )
           )
         ),
+
+        // 加载浮层，防止未加载完成就被点击出现非预期的结果.
+        _loading?Container(
+          width: double.infinity,
+          height: double.infinity,
+          decoration: BoxDecoration(),
+        ):Container(),
       ],
     );
 
@@ -358,6 +373,9 @@ class WebviewHackController {
     // 安装点击/fouce监听
     // 查找到所有的input表单进行处理
     controller.evaluateJavascript(source: _onclickinputjs).then((value) => print("执行成功 => $value"));
+
+    // 去除遮罩层
+    _state._onLoadFinish();
   }
 
   bool runned = false;
