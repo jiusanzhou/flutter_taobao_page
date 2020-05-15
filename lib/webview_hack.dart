@@ -204,40 +204,85 @@ class WebviewHackController {
     // FORM 需要取消事件，防止边缘触发
     if (i.target.tagName === "FORM") {
       i.preventDefault();
+      _callhackerback("echo", "点击对象为 FORM，防止边缘点击，取消事件");
       return;
     }
 
     // 非 INPUT 输入框 就不处理
-    if (i.target.tagName !== "INPUT") return;
+    if (i.target.tagName !== "INPUT") {
+      _callhackerback("echo", "非INPUT点击，不处理");
+      return;
+    }
 
     // 硬编码: 目前只处理淘宝帐号/密码的输入框
-    if (i.target.id !== "fm-login-password" && i.target.id !== "fm-login-id") return;
+    if (i.target.id !== "fm-login-password" && i.target.id !== "fm-login-id") {
+      _callhackerback("echo", "INPUT的ID为:"+i.target.id+",不是登录框，不处理");
+      return;
+    }
+
+    _callhackerback("echo", "进入处理流程...");
 
     // 取得INPUT的完整样式
     var __style = getComputedStyle(i.target);
 
     // 如果原来有节点保存，将其颜色恢复, 这里懒得备份用当前节点的颜色
-    if (window.__inputelement) window.__inputelement.style.color = __style.color;
+    if (window.__inputelement) {
+      _callhackerback("echo", "[*] 原来点击过，将其颜色恢复");
+      window.__inputelement.style.color = __style.color;
+    }
+
+    _callhackerback("echo", "[*] 取得样式");
 
     // 生成需要的样式
     var __tmpstyle = {
       fontSize: parseFloat(__style.fontSize), // 目前只返回字体大小
     };
 
+    _callhackerback("echo", "[*] 取得字体大小");
+
     // 保存节点，以便接受控制
     window.__inputelement = i.target;
 
-    // 报告事件: ID目前没有设置，使用全局变量保存当前节点
-    _callhackerback("input_fouce", "", {
-      "rect": __inputelement.getBoundingClientRect().toJSON(), // 大小和位置
-      "style": __tmpstyle, // 样式
-      "value": i.target.value, // 数据值
-      "type": i.target.getAttribute("type"), // 表单类型
-      "screen": { width: screen.availWidth, height: screen.availHeight }, // 屏幕大小
-    });
+    try {
+      // 报告事件: ID目前没有设置，使用全局变量保存当前节点
+      let rect = __inputelement.getBoundingClientRect();
+
+      // 判断是否获取成功
+      if (!rect.x) {
+        _callhackerback("echo", "[*] 点击对象获取 Rect 失败");
+        function getPosition( el ) {
+            var x = 0;
+            var y = 0;
+            while( el && !isNaN( el.offsetLeft ) && !isNaN( el.offsetTop ) ) {
+              x += el.offsetLeft - el.scrollLeft;
+              y += el.offsetTop - el.scrollTop;
+              el = el.offsetParent;
+            }
+            return { top: y, left: x, y, x };
+        }
+        // 使用其他办法尝试获取
+        rect = getPosition(__inputelement);
+        rect.height = __inputelement.clientHeight;
+        rect.width = __inputelement.clientWidth;
+      }
+
+      _callhackerback("input_fouce", "", {
+        "rect": rect, // 大小和位置
+        "style": __tmpstyle, // 样式
+        "value": i.target.value, // 数据值
+        "type": i.target.getAttribute("type"), // 表单类型
+        "screen": { width: screen.availWidth, height: screen.availHeight }, // 屏幕大小
+      });
+      _callhackerback("echo", "[*] 报告 input_fouce 成功");
+    } catch(e) {
+      _callhackerback("echo", "[*] 报告 input_fouce 失败:"+e);
+    }
+
 
     // 停止事件
     i.preventDefault();
+
+    _callhackerback("echo", "[*] 处理完成");
   };
   '_____install process handler'
   """;
@@ -323,7 +368,6 @@ class WebviewHackController {
   Rect _orginalRect;
 
   dynamic _onInputFouce(List<dynamic> args) {
-    String path = args[0];
     print("==== 点击了 input ===> ${args[1]}");
     var data = json.decode(args[1]);
     _orginalRect = Rect.fromJson(data["rect"]);
@@ -373,8 +417,8 @@ class Rect {
   double width;
   double height;
   double top;
-  double right;
-  double bottom;
+  // double right;
+  // double bottom;
   double left;
 
   Rect.fromJson(Map<String, dynamic> data) {
@@ -383,7 +427,7 @@ class Rect {
     width = checkDouble(data["width"]).toDouble();
     height = checkDouble(data["height"]).toDouble();
     top = checkDouble(data["top"]).toDouble();
-    right = checkDouble(data["right"]).toDouble();
+    // right = checkDouble(data["right"]).toDouble();
     left = checkDouble(data["left"]).toDouble();
   }
 
