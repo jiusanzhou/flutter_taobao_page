@@ -9,7 +9,7 @@ class TaobaoPageView extends StatefulWidget {
   final Widget title;
   final TabController tabController;
 
-  final List<List<Page>> groupedPages;
+  final List<List<WebviewPage>> groupedPages;
 
   TaobaoPageView({
     // this.children,
@@ -87,7 +87,7 @@ class _TaobaoPageViewState extends State<TaobaoPageView> {
   // [ 0 ] [ 1 ] [ 2 ] [ 3 ]
   // [ 4 ] [ 5 ] [ 6 ] [ 7 ]
   // [ 8 ] [ 9 ]
-  Widget _buildStack(BuildContext context, List<Page> pages) {
+  Widget _buildStack(BuildContext context, List<WebviewPage> pages) {
     return IndexedStack(
       index: widget.stackIndex,
       children: List.generate(pages.length, (index) => pages[index].webview),

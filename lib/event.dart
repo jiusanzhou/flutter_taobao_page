@@ -4,27 +4,27 @@ import 'package:flutter_taobao_page/action_page.dart';
 // define taobao page event
 
 class EventPageCreated {
-  Page page;
+  WebviewPage page;
 
   EventPageCreated(this.page);
 }
 
 class EventPageLoadStart {
-  Page page;
+  WebviewPage page;
   String url;
 
   EventPageLoadStart(this.page, this.url);
 }
 
 class EventPageLoadStop {
-  Page page;
+  WebviewPage page;
   String url;
 
   EventPageLoadStop(this.page, this.url);
 }
 
 class EventPageLoadError {
-  Page page;
+  WebviewPage page;
   String url;
   int code;
   String message;
@@ -33,14 +33,14 @@ class EventPageLoadError {
 }
 
 class EventHasLoginPage {
-  Page page;
+  WebviewPage page;
   String url;
 
   EventHasLoginPage(this.page, this.url);
 }
 
 class EventUserLogon {
-  Page page;
+  WebviewPage page;
   dynamic data;
 
   EventUserLogon(this.page, this.data);
