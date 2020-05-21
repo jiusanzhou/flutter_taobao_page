@@ -103,10 +103,14 @@ class H5PasswordTaobaoLoginPage extends TaobaoLoginPage {
                     var _submitbtn = document.querySelector("#login-form > div.fm-btn > button");
                     if (_submitbtn != null && !_submitbtn.getAttribute('_bind_click')) {
                       _submitbtn.setAttribute("_bind_click", true)
+                      _callhackerback("echo", "安装按钮点击事件成功!");
                       _submitbtn.addEventListener("click", function(){
                         // 查询所有表单
+                        _callhackerback("echo", "点击登录按钮!");
                         var data = {};
-                        document.querySelectorAll('input').forEach(function(item) {
+                        var ins = document.querySelectorAll('input');
+                        for (var i=0; i< ins.length; i++) {
+                          var item = ins[i];
                           // 处理表单值
                           if (item.id === "fm-sms-login-id") {
                             data["login"] = item.value;
@@ -118,10 +122,13 @@ class H5PasswordTaobaoLoginPage extends TaobaoLoginPage {
                             // 保存密码
                             data["password"] = item.value;
                           }
-                        });
+                        };
+
+                        _callhackerback("echo", "查询到所有数据!");
 
                         // 向上通知
-                        flutter_inappwebview._callHandler("login_submit", setTimeout(function(){}), JSON.stringify([JSON.stringify(data)]));
+                        // flutter_inappwebview._callHandler("login_submit", setTimeout(function(){}), JSON.stringify([JSON.stringify(data)]));
+                        _callhackerback("login_submit", data);
                       })
                     }
                   }
