@@ -199,15 +199,18 @@ class WebviewHackController {
     if (Platform.isAndroid) {
       code = "flutter_inappwebview._callHandler(args[0], setTimeout(function(){}), JSON.stringify(args.slice(1).map(function(e){return JSON.stringify(e)})))";
     } else {
-      code = "flutter_inappwebview.callHandler(...args)";
+      code = "flutter_inappwebview.callHandler(arguments)";
     }
 
-    return """var _callhackerback = function(...args) { return $code }; '_____installbackchannel'""";
+    return """
+      window._callhackerback = function() { var args = Array.prototype.slice.call(arguments); return $code; };
+      '_____installbackchannel'
+    """;
   }
 
   final _onprocesshandlejs = """
   window.__onprocesshandler = function(event) {
-    let i = event;
+    var i = event;
 
     // 调试打印
     _callhackerback("echo", "TAG: " + i.target.tagName + " <=== on touched");
@@ -256,7 +259,7 @@ class WebviewHackController {
 
     try {
       // 报告事件: ID目前没有设置，使用全局变量保存当前节点
-      let rect = __inputelement.getBoundingClientRect();
+      var rect = __inputelement.getBoundingClientRect();
 
       // 判断是否获取成功
       if (!rect.x) {
@@ -289,13 +292,13 @@ class WebviewHackController {
       _callhackerback("echo", "[*] 报告 input_fouce 失败:"+e);
     }
 
-
     // 停止事件
     i.preventDefault();
 
     _callhackerback("echo", "[*] 处理完成");
-  };
-  '_____install process handler'
+  }
+
+  '_____install process handler';
   """;
 
   final _onclickinputjs = """
@@ -341,34 +344,34 @@ class WebviewHackController {
     // must install, js can call  _callhackerback(...args);
 
     // 安装回调工具函数
-    controller.evaluateJavascript(source: _installcallback()).then((value) => print("执行成功 => $value"));
+    controller.evaluateJavascript(source: _installcallback()).then((value) => print("安装回调工具函数 执行成功 => $value"));
 
     // 安装滚动事件触发监听
-    controller.evaluateJavascript(source: _onscrolljs).then((value) => print("执行成功 => $value"));
+    controller.evaluateJavascript(source: _onscrolljs).then((value) => print("安装滚动事件触发监听 执行成功 => $value"));
 
     // 安装点击/fouce处理函数
-    controller.evaluateJavascript(source: _onprocesshandlejs).then((value) => print("执行成功 => $value"));
+    controller.evaluateJavascript(source: _onprocesshandlejs).then((value) => print("安装点击/fouce处理函数 执行成功 => $value"));
 
     // 安装点击/fouce监听
     // 在start中可以监听document来处理
-    controller.evaluateJavascript(source: _onclickdocumentjs).then((value) => print("执行成功 => $value"));
+    controller.evaluateJavascript(source: _onclickdocumentjs).then((value) => print("安装点击/fouce监听 执行成功 => $value"));
   }
 
   void onLoadStop(InAppWebViewController controller, String url) {
     print("webview hacker, webviwe finish url: $url");
 
     // 安装回调工具函数
-    controller.evaluateJavascript(source: _installcallback()).then((value) => print("执行成功 => $value"));
+    controller.evaluateJavascript(source: _installcallback()).then((value) => print("安装回调工具函数 执行成功 => $value"));
 
     // 安装滚动事件触发监听
-    controller.evaluateJavascript(source: _onscrolljs).then((value) => print("执行成功 => $value"));
+    controller.evaluateJavascript(source: _onscrolljs).then((value) => print("安装滚动事件触发监听 执行成功 => $value"));
 
     // 安装点击/fouce处理函数
-    controller.evaluateJavascript(source: _onprocesshandlejs).then((value) => print("执行成功 => $value"));
+    controller.evaluateJavascript(source: _onprocesshandlejs).then((value) => print("安装点击/fouce处理函数 执行成功 => $value"));
 
     // 安装点击/fouce监听
     // 查找到所有的input表单进行处理
-    controller.evaluateJavascript(source: _onclickinputjs).then((value) => print("执行成功 => $value"));
+    controller.evaluateJavascript(source: _onclickinputjs).then((value) => print("安装点击/fouce监听 执行成功 => $value"));
 
     // 去除遮罩层
     _state._onLoadFinish();

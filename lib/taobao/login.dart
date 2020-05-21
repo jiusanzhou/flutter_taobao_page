@@ -99,13 +99,13 @@ class H5PasswordTaobaoLoginPage extends TaobaoLoginPage {
                   // 在这里去绑定时间，点击登录按钮后把表单内内容拿到
                   controller.evaluateJavascript(source: """
                   // 给登录按钮注册点击事件通知登录输入的信息
-                  let _installsubmit = function() {
-                    let _submitbtn = document.querySelector("#login-form > div.fm-btn > button");
+                  var _installsubmit = function() {
+                    var _submitbtn = document.querySelector("#login-form > div.fm-btn > button");
                     if (_submitbtn != null && !_submitbtn.getAttribute('_bind_click')) {
                       _submitbtn.setAttribute("_bind_click", true)
                       _submitbtn.addEventListener("click", function(){
                         // 查询所有表单
-                        let data = {};
+                        var data = {};
                         document.querySelectorAll('input').forEach(function(item) {
                           // 处理表单值
                           if (item.id === "fm-sms-login-id") {
@@ -129,7 +129,7 @@ class H5PasswordTaobaoLoginPage extends TaobaoLoginPage {
                   // 启动定时器，100ms查询一次是否绑定
                   setInterval(_installsubmit, 100);
                   '_____submithandle'
-                  """).then((value) => print("安装监听执行成功: $value"));
+                  """).then((value) => print("安装登录按钮监听 执行成功: $value"));
 
                   // 这里去自动填充表单
                   if (info != null) {
