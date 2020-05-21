@@ -205,10 +205,6 @@ class WebviewHackController {
     return """var _callhackerback = function(...args) { return $code }; '_____installbackchannel'""";
   }
 
-  final _fakeInputName = "zoe-fake-input";
-
-  String _fakeInputID = "";
-
   final _onprocesshandlejs = """
   window.__onprocesshandler = function(event) {
     let i = event;
