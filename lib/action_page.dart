@@ -321,7 +321,8 @@ class WebviewPage {
 
     _queuePaused = false;
 
-    _setUrl(url);
+    // 一定要处理吗???
+    // _setUrl(url);
 
     onLoadStop?.call(controller, url);
   }
