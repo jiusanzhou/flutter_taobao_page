@@ -52,7 +52,7 @@ class PageOptions {
   });
 }
 
-class Page {
+class WebviewPage {
 
   // TODO: auto load scripts
 
@@ -103,7 +103,7 @@ class Page {
   // TOOD: with android low version
   bool _missES6 = Platform.isAndroid;
 
-  Page(
+  WebviewPage(
     this.id,
     this._url,
     {
@@ -321,7 +321,8 @@ class Page {
 
     _queuePaused = false;
 
-    _setUrl(url);
+    // 一定要处理吗???
+    // _setUrl(url);
 
     onLoadStop?.call(controller, url);
   }

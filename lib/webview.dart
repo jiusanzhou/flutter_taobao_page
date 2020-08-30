@@ -25,10 +25,15 @@ class TaobaoWebview extends StatefulWidget {
 
   final String initialUrl;
 
+  final bool useMobile;
+
   final List<ContentBlocker> blockers;
+
+  final bool quickOnFinish;
 
   TaobaoWebview({
     this.initialUrl: "about:blank",
+    this.useMobile: false,
 
     this.onWebViewCreated,
     this.onLoadStart,
@@ -36,6 +41,8 @@ class TaobaoWebview extends StatefulWidget {
     this.onLoadError,
 
     this.onProgressChanged,
+
+    this.quickOnFinish: true,
 
     this.blockers: const [],
   });
@@ -56,8 +63,8 @@ class _TaobaoWebviewState extends State<TaobaoWebview> with AutomaticKeepAliveCl
   }
 
   void _onLoadStart(InAppWebViewController controller, String url) {
+    tmpurl = url;
 
-    // 
     if (widget.onLoadStart!=null) widget.onLoadStart(controller, url);
   }
 
@@ -65,6 +72,23 @@ class _TaobaoWebviewState extends State<TaobaoWebview> with AutomaticKeepAliveCl
 
     // 
     if (widget.onLoadStop!=null) widget.onLoadStop(controller, url);
+  }
+
+  String tmpurl;
+  int tmpval;
+  void _onProcessChanged(InAppWebViewController controller, int v) {
+    if (widget.onProgressChanged!=null) widget.onProgressChanged(controller, v);
+
+    // 不是快速就不处理
+    if (!widget.quickOnFinish) return;
+
+    if (v == 100 && tmpval < 100) {
+      // 应该就是第一次到达100，调用 onFinished
+      _onLoadStop(controller, tmpurl);
+    }
+
+    // 保存 当前进度
+    tmpval = v;
   }
 
   void _onLoadError(InAppWebViewController controller, String url, int code, String message) {
@@ -82,16 +106,18 @@ class _TaobaoWebviewState extends State<TaobaoWebview> with AutomaticKeepAliveCl
           javaScriptEnabled: true,
           debuggingEnabled: false,
           contentBlockers: widget.blockers,
+          preferredContentMode: widget.useMobile?InAppWebViewUserPreferredContentMode.MOBILE:InAppWebViewUserPreferredContentMode.DESKTOP,
         ),
         androidInAppWebViewOptions: AndroidInAppWebViewOptions(
-          useWideViewPort: true,
+          useWideViewPort: false,
+          domStorageEnabled: true,
         ),
       ),
       onWebViewCreated: _onWebViewCreated,
       onLoadStart: _onLoadStart,
-      onLoadStop: _onLoadStop,
+      onLoadStop: widget.quickOnFinish?null:_onLoadStop, // 快速不绑定真实的 onStop
       onLoadError: _onLoadError,
-      onProgressChanged: widget.onProgressChanged,
+      onProgressChanged: _onProcessChanged,
     );
   }
 }

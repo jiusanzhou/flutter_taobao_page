@@ -29,7 +29,7 @@ class MyApp extends StatelessWidget {
         primaryColor: Colors.blue,
         primarySwatch: Colors.blue,
       ),
-      home: HomePage(title: '淘宝数据'),
+      home: HomePage(title: '淘宝'),
     );
   }
 }

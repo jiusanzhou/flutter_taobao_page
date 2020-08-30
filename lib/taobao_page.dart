@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_taobao_page/action_page.dart';
@@ -42,8 +41,8 @@ class _TaobaoPageState extends State<TaobaoPage>
 
   TabController _tabController;
 
-  List<Page> _pages = [];
-  List<List<Page>> _pageGroups = [];
+  List<WebviewPage> _pages = [];
+  List<List<WebviewPage>> _pageGroups = [];
 
   bool get _isLogon => widget.loginPage.isLogin;
 
@@ -72,9 +71,9 @@ class _TaobaoPageState extends State<TaobaoPage>
   }
 
   // groups
-  List<List<Page>> _buildPageGroups(BuildContext context) {
-    List<List<Page>> tabs = [];
-    List<Page> _tmp = [];
+  List<List<WebviewPage>> _buildPageGroups(BuildContext context) {
+    List<List<WebviewPage>> tabs = [];
+    List<WebviewPage> _tmp = [];
     int _idx = 0; // TODO: more customize, now always be the first one.
     _pages.forEach((p) {
       p.options.visible?tabs.add([p]):tabs.isEmpty?_tmp.add(p):tabs[_idx].add(p);
@@ -119,7 +118,7 @@ class _TaobaoPageState extends State<TaobaoPage>
     );
   }
 
-  void _addPage(Page page) {
+  void _addPage(WebviewPage page) {
     setState(() {
       _pages.add(page);
     });
@@ -133,7 +132,7 @@ class _TaobaoPageState extends State<TaobaoPage>
     setState(() => _scrollable = v);
   }
 
-  void _changePage(Page page) {
+  void _changePage(WebviewPage page) {
     setState(() {
       _tabIndex = page.groupId;
       _tabController.animateTo(page.groupId);
@@ -180,14 +179,14 @@ class TaobaoPageController {
   }
 
   // pages return pages we have
-  List<Page> get pages => _state._pages;
+  List<WebviewPage> get pages => _state._pages;
 
   // grooups pages
-  List<List<Page>> get pageGroups => _state._pageGroups;
+  List<List<WebviewPage>> get pageGroups => _state._pageGroups;
 
   TabController get tabController => _state._tabController;
 
-  Page get currentViewPage => _state._pageGroups[_state._tabIndex][_state._stackIndex];
+  WebviewPage get currentViewPage => _state._pageGroups[_state._tabIndex][_state._stackIndex];
 
   // debug
   bool get isDebug => _state._debug;
@@ -229,7 +228,7 @@ class TaobaoPageController {
     if (!_state._isLogon && !action.noLogin) return Future.error("not account login");
 
     // find match
-    Page curp = _state._pages.firstWhere((p) => p.match(action.url), orElse: () => null);
+    WebviewPage curp = _state._pages.firstWhere((p) => p.match(action.url), orElse: () => null);
     // if we found matched page, just do action
     // TODO: check pages overload, try another page
     if (curp != null) return curp.doAction(action);
@@ -242,12 +241,12 @@ class TaobaoPageController {
       onLoadStart: onLoadStart,
       onLoadStop: onLoadStop,
       onLoadError: onLoadError,
-    ).then((Page page) {
+    ).then((WebviewPage page) {
       return page.doAction(action);
     });
   }
 
-  Future<Page> openPage(
+  Future<WebviewPage> openPage(
     String url,
     {
       CreatedCallback onCreated,
@@ -271,7 +270,7 @@ class TaobaoPageController {
     }
 
     if (options!=null && options.max > 0) {
-      List<Page> ps = _state._pages.where((p) => p.match(url)).toList();
+      List<WebviewPage> ps = _state._pages.where((p) => p.match(url)).toList();
       if (ps.length >= options.max) {
         // TODO: get the random page
         if (options.refresh) ps[0].webviewController.reload(); // TODO: should replace onHandler?
@@ -285,8 +284,8 @@ class TaobaoPageController {
     // event filter page with id
 
     // init the new page
-    Page page;
-    page = Page(
+    WebviewPage page;
+    page = WebviewPage(
       _len, url,
       onWebViewCreated: (controller) {
         emit(EventPageCreated(page));
@@ -317,7 +316,7 @@ class TaobaoPageController {
   }
 
   // show special page
-  void showPage(Page page) {
+  void showPage(WebviewPage page) {
     // set with tab index and stack index
     // for now just auto display with our hook
     _state._changePage(page);
@@ -325,12 +324,12 @@ class TaobaoPageController {
 
   // show special page with url
   void showPageWithUrl(String url) {
-    Page page = getPageWithUrl(url);
+    WebviewPage page = getPageWithUrl(url);
     if (page!=null) return showPage(page);
     print("can't found page with url: $url, maybe you should open it first.");
   }
 
-  Page getPageWithUrl(String url) {
+  WebviewPage getPageWithUrl(String url) {
     return _state._pages.firstWhere((element) => element.match(url), orElse: () => null);
   }
 

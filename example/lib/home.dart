@@ -1,3 +1,4 @@
+import 'package:example/debug.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_taobao_page/action_page.dart';
 import 'package:flutter_taobao_page/taobao/pc.dart';
@@ -84,6 +85,9 @@ class _HomePageState extends State<HomePage> {
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           _loginPage.isLogin?_startProcess():_loginPage.open(context);
+
+          // Navigator.push(context, MaterialPageRoute(builder: (context) => DebugWebview()));
+
         }, child: Icon(Icons.add),
       ),
     );
