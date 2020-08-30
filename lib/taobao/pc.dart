@@ -65,6 +65,7 @@ class PCWeb {
           return;
         }
       },
+      options: PageOptions(useMobile: true),
     ).then((value) {
       // check verify code
       if (value["rgv587_flag"]=="sm" && value["url"]!="" && value["url"].indexOf("_____tmd_____") > 0) {

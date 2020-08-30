@@ -6,6 +6,9 @@ typedef void LoadStartCallback(InAppWebViewController controller, String url);
 typedef void LoadStopCallback(InAppWebViewController controller, String url);
 typedef void LoadErrorCallback(InAppWebViewController controller, String url, int code, String message);
 
+const UA_PC = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.135 Safari/537.36";
+const UA_IOS = "Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1";
+
 class TaobaoWebview extends StatefulWidget {
   ///Event fired when the [InAppWebView] is created.
   final void Function(InAppWebViewController controller) onWebViewCreated;
@@ -107,6 +110,7 @@ class _TaobaoWebviewState extends State<TaobaoWebview> with AutomaticKeepAliveCl
           debuggingEnabled: false,
           contentBlockers: widget.blockers,
           preferredContentMode: widget.useMobile?InAppWebViewUserPreferredContentMode.MOBILE:InAppWebViewUserPreferredContentMode.DESKTOP,
+          userAgent: widget.useMobile ? UA_IOS : UA_PC// we need to set correct ua for page to load
         ),
         androidInAppWebViewOptions: AndroidInAppWebViewOptions(
           useWideViewPort: false,

@@ -41,6 +41,9 @@ class PageOptions {
 
   List<ContentBlocker> blockers;
 
+  // use mobile mode or not
+  bool useMobile;
+
   PageOptions({
     this.keepalive: false,
     this.visible: false,
@@ -49,6 +52,7 @@ class PageOptions {
     this.timeout,
     this.refresh: false,
     this.blockers: const [],
+    this.useMobile: false, // we need to set for webviewpage
   });
 }
 
@@ -128,7 +132,8 @@ class WebviewPage {
       onLoadStart: _onLoadStart,
       onLoadStop: _onLoadStop,
       onLoadError: _onLoadError,
-      blockers: options.blockers
+      blockers: options.blockers,
+      useMobile: options.useMobile,
     );
 
     // set a timeout
