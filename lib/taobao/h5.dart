@@ -20,6 +20,10 @@ class H5API {
     return controller.doAction(ActionJob(H5PageUrls.home, code: H5APICode.userProfile(), noLogin: check));
   }
 
+  Future<dynamic> orderList({int page: 1, String type: "all"}) {
+    return controller.doAction(ActionJob(H5PageUrls.home, code: H5APICode.orderList(page: page, type: type)));
+  }
+
   Future<dynamic> orderDetail(String orderId) {
     return controller.doAction(ActionJob(H5PageUrls.home, code: H5APICode.orderDetail(orderId)));
   }
@@ -35,6 +39,19 @@ class H5APICode {
     return _basicRequest("mtop.taobao.mclaren.getuserprofile", "1.0", "{}");
   }
 
+  // 订单列表
+  // all, waitRate, waitConfirm, waitSend, waitPay
+  static String orderList({int page: 1, String type: "all"}) {
+    // "spm":"a215s.7406091.toolbar.i1"
+    return _basicRequest("mtop.order.queryboughtlist", "4.0", """{
+      appVersion: "1.0",
+      appName: "tborder",
+      page: $page,
+      tabCode: "$type",
+    }""");
+  }
+
+  // 订单详情
   static String orderDetail(String orderId) {
     return _basicRequest("mtop.order.querydetail", "4.0", """{
       appVersion:'1.0',
