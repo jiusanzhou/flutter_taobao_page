@@ -31,6 +31,10 @@ class H5API {
   Future<dynamic> logisDetail(String orderId) {
     return controller.doAction(ActionJob(H5PageUrls.home, code: H5APICode.logisDetail(orderId)));
   }
+
+  Future<dynamic> vipScore() {
+    return  controller.doAction(ActionJob(H5PageUrls.home, code: H5APICode.vipScore()));
+  }
 }
 
 class H5APICode {
@@ -67,6 +71,15 @@ class H5APICode {
       "v1.0", """{
         orderId: '$orderId',
       }""");
+  }
+
+  // 淘气值
+  static String vipScore() {
+    return _basicRequest(
+      "mtop.vip.gold.user.customize",
+      "1.0", 
+      """{"source":"vipDayNew"}""",
+    );
   }
 
   static String _basicRequest(String api, String ver, String data) {
