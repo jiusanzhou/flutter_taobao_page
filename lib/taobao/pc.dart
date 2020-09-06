@@ -140,8 +140,8 @@ var _score = document.querySelector('.tao-score');
 var data = {
     buyer: {
         tao_score: _score?_score.innerText:null,
-        summary: buyertmp.querySelector('a:nth-child(1)').innerText,
-        rankimg: buyertmp.querySelector('a:nth-child(2) > img').src,
+        // summary: buyertmp.querySelector('a:nth-child(1)').innerText,
+        // rankimg: buyertmp.querySelector('a:nth-child(2) > img').src,
         ratings: Array.from(document.querySelectorAll('#new-rate-content > div.clearfix.personal-info > div.personal-rating > table.tb-rate-table.align-c.thm-plain > tbody > tr')).map(function(i) {return Array.from(i.querySelectorAll('td')).map(function(i) {return i.innerText})}),
     },
 };
