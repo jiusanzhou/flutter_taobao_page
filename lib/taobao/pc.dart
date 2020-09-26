@@ -137,12 +137,21 @@ throw(r.responseText)
     return """var buyertmp = document.querySelector('#new-rate-content > div.clearfix.personal-info > div.personal-rating > h4.tb-rate-ico-bg.ico-buyer');
 var sellertmp = document.querySelector('#new-rate-content > div.clearfix.personal-info > div.personal-rating > h4.tb-rate-ico-bg.ico-seller');
 var _score = document.querySelector('.tao-score');
+var _rate_info_node = document.querySelector('#new-rate-content > div.clearfix.personal-info > div.personal-rating > table:nth-child(7)');
+var _rank_img_node = _rate_info_node && _rate_info_node.querySelector('img.rank');
+var _rank_score_node = _rate_info_node && _rate_info_node.querySelector('tr:nth-child(1) > td');
+var _rank_level_node = _rate_info_node && _rate_info_node.querySelector('tr:nth-child(2) > td');
 var data = {
     buyer: {
         tao_score: _score?_score.innerText:null,
+        rate_info: {
+          rank_img: _rank_img_node && _rank_img_node.src,
+          rank_score: _rank_score_node && _rank_score_node.textContent,
+          rank_level: _rank_level_node && _rank_level_node.textContent,
+        },
         // summary: buyertmp.querySelector('a:nth-child(1)').innerText,
         // rankimg: buyertmp.querySelector('a:nth-child(2) > img').src,
-        ratings: Array.from(document.querySelectorAll('#new-rate-content > div.clearfix.personal-info > div.personal-rating > table.tb-rate-table.align-c.thm-plain > tbody > tr')).map(function(i) {return Array.from(i.querySelectorAll('td')).map(function(i) {return i.innerText})}),
+        // ratings: Array.from(document.querySelectorAll('#new-rate-content > div.clearfix.personal-info > div.personal-rating > table.tb-rate-table.align-c.thm-plain > tbody > tr')).map(function(i) {return Array.from(i.querySelectorAll('td')).map(function(i) {return i.innerText})}),
     },
 };
 if (sellertmp) {
@@ -150,7 +159,8 @@ if (sellertmp) {
         summary: sellertmp.querySelector('a:nth-child(1)').innerText,
         rankimg: sellertmp.querySelector('img').src,
     }
-    data.buyer.ratings = Array.from(document.querySelectorAll('#new-rate-content > div.clearfix.personal-info > div.personal-rating > table:nth-child(8) > tbody > tr')).map(function(i) {return Array.from(i.querySelectorAll('td')).map(function(i) {return i.innerText})})
+    data.buyer.ratings = Array.from(document.querySelectorAll('#new-rate-content > div.clearfix.personal-info > div.personal-rating > table.tb-rate-table.align-c.thm-plain > tbody > tr')).map(function(i) {return Array.from(i.querySelectorAll('td')).map(function(i) {return i.innerText})})
+    // data.buyer.ratings = Array.from(document.querySelectorAll('#new-rate-content > div.clearfix.personal-info > div.personal-rating > table:nth-child(8) > tbody > tr')).map(function(i) {return Array.from(i.querySelectorAll('td')).map(function(i) {return i.innerText})})
 }
 return data
 """;
