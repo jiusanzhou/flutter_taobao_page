@@ -136,8 +136,8 @@ throw(r.responseText)
   static String rateScore() {
     return """var buyertmp = document.querySelector('#new-rate-content > div.clearfix.personal-info > div.personal-rating > h4.tb-rate-ico-bg.ico-buyer');
 var sellertmp = document.querySelector('#new-rate-content > div.clearfix.personal-info > div.personal-rating > h4.tb-rate-ico-bg.ico-seller');
-var _score = document.querySelector('.tao-score');
-var _rate_info_node = document.querySelector('#new-rate-content > div.clearfix.personal-info > div.personal-rating > table:nth-child(7)');
+var _score = document.querySelector('.ico-buyer');
+var _rate_info_node = _score && _score.nextElementSibling;
 var _rank_img_node = _rate_info_node && _rate_info_node.querySelector('img.rank');
 var _rank_score_node = _rate_info_node && _rate_info_node.querySelector('tr:nth-child(1) > td');
 var _rank_level_node = _rate_info_node && _rate_info_node.querySelector('tr:nth-child(2) > td');
