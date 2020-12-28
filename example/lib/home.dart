@@ -1,4 +1,3 @@
-import 'package:example/debug.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_taobao_page/action_page.dart';
 import 'package:flutter_taobao_page/taobao/pc.dart';

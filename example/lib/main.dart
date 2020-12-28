@@ -1,11 +1,12 @@
 import 'dart:async';
 
-import 'package:example/home.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_taobao_page/event.dart';
 import 'package:flutter_taobao_page/hack.dart';
 import 'package:flutter_taobao_page/taobao/h5.dart';
 import 'package:flutter_taobao_page/taobao_page.dart';
+
+import 'home.dart';
 
 void main() => runApp(MyApp());
 
