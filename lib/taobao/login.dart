@@ -182,6 +182,13 @@ class H5PasswordTaobaoLoginPage extends TaobaoLoginPage {
               onProgressChanged: (_, v) {
                 hacker?.onProcessChange(_, v);
               },
+              blockers: [
+                getPatternBlocker("um\.js\$"),
+                getPatternBlocker("\.gif\$"),
+                // "gm\.mmstat\.com|ynuf\.aliapp\.org|\.gif\$",
+                getPatternBlocker("gm\.mmstat\.com"),
+                getPatternBlocker("ynuf\.aliapp\.org"),
+              ],
             );
           }
         ),

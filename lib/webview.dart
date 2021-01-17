@@ -104,17 +104,18 @@ class _TaobaoWebviewState extends State<TaobaoWebview> with AutomaticKeepAliveCl
   Widget build(BuildContext context) {
     return InAppWebView(
       initialUrl: widget.initialUrl,
-      initialOptions: InAppWebViewWidgetOptions(
-        inAppWebViewOptions: InAppWebViewOptions(
+      initialOptions: InAppWebViewGroupOptions(
+        crossPlatform: InAppWebViewOptions(
           javaScriptEnabled: true,
-          debuggingEnabled: false,
+          debuggingEnabled: true,
           contentBlockers: widget.blockers,
-          preferredContentMode: widget.useMobile?InAppWebViewUserPreferredContentMode.MOBILE:InAppWebViewUserPreferredContentMode.DESKTOP,
+          preferredContentMode: widget.useMobile ? UserPreferredContentMode.MOBILE:UserPreferredContentMode.DESKTOP,
           userAgent: widget.useMobile ? UA_IOS : UA_PC// we need to set correct ua for page to load
         ),
-        androidInAppWebViewOptions: AndroidInAppWebViewOptions(
+        android: AndroidInAppWebViewOptions(
           useWideViewPort: false,
           domStorageEnabled: true,
+          // useHybridComposition: true,
         ),
       ),
       onWebViewCreated: _onWebViewCreated,
@@ -132,12 +133,35 @@ final killerBlocker = ContentBlocker(
       ContentBlockerTriggerResourceType.STYLE_SHEET,
       ContentBlockerTriggerResourceType.IMAGE,
       ContentBlockerTriggerResourceType.FONT,
+      ContentBlockerTriggerResourceType.SCRIPT,
+      ContentBlockerTriggerResourceType.MEDIA,
     ],
-    urlFilter: ".+",
+    urlFilter: "gm\.mmstat\.com|ynuf\.aliapp\.org|\.gif\$",
   ),
   action: ContentBlockerAction(
     type: ContentBlockerActionType.BLOCK,
   ),
 );
+
+ContentBlocker getPatternBlocker(String pattern) {
+  return ContentBlocker(
+    trigger: ContentBlockerTrigger(
+      resourceType: [
+        ContentBlockerTriggerResourceType.STYLE_SHEET,
+        ContentBlockerTriggerResourceType.IMAGE,
+        ContentBlockerTriggerResourceType.FONT,
+        ContentBlockerTriggerResourceType.SCRIPT,
+        ContentBlockerTriggerResourceType.MEDIA,
+        ContentBlockerTriggerResourceType.RAW,
+        ContentBlockerTriggerResourceType.DOCUMENT,
+        ContentBlockerTriggerResourceType.SVG_DOCUMENT,
+      ],
+      urlFilter: pattern,
+    ),
+    action: ContentBlockerAction(
+      type: ContentBlockerActionType.BLOCK,
+    ),
+  );
+}
 
 // 添加webview控制器

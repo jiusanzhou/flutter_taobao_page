@@ -166,6 +166,9 @@ class _WebviewHackState extends State<WebviewHack> {
           width: double.infinity,
           height: double.infinity,
           decoration: BoxDecoration(),
+          child: Center(
+            child: CircularProgressIndicator(),
+          ),
         ):Container(),
       ],
     );
@@ -189,6 +192,7 @@ class WebviewHackController {
     controller.addJavaScriptHandler(handlerName: "input_fouce", callback: _onInputFouce);
     controller.addJavaScriptHandler(handlerName: "scroll", callback: _onScroll);
     controller.addJavaScriptHandler(handlerName: "echo", callback: _onEcho);
+    controller.addJavaScriptHandler(handlerName: "mock_page_finish", callback: _onMockPageFinish);
   }
 
 
@@ -309,13 +313,27 @@ class WebviewHackController {
 
       clearInterval(_sbclickinput);
 
-      // _callhackerback("echo", "给所有 input (" + _ins.length + ") 添加 事件监听");
+      _callhackerback("echo", "给所有 input (" + _ins.length + ") 添加 事件监听");
 
       _ins.forEach(function(e) {
         e.addEventListener("touchend", __onprocesshandler, true)
       });
     },500);
     '________clickinputjs'
+  """;
+
+  final _onprefinishjs = """
+    var _sbprefinish = setInterval(function(){
+      _callhackerback("echo", "页面未加载完成");
+      if (!document || document.querySelectorAll("input").length === 0) return;
+      clearInterval(_sbprefinish);
+
+      _callhackerback("echo", "提前加载完成");
+      // 这里可以提前宣告加载完成
+      // setTimeout(function(){_callhackerback("mock_page_finish", "");},1000);
+      _callhackerback("mock_page_finish", "");
+    }, 500);
+    '______onprefinishjs'
   """;
 
   final _onclickdocumentjs = """
@@ -354,7 +372,11 @@ class WebviewHackController {
 
     // 安装点击/fouce监听
     // 在start中可以监听document来处理
+    // 难道是这里导致老是加载卡住10%？ => 里面有定时器
     controller.evaluateJavascript(source: _onclickdocumentjs).then((value) => print("安装点击/fouce监听 执行成功 => $value"));
+
+    // 安装模拟加载完成触发
+    // controller.evaluateJavascript(source: _onprefinishjs).then((value) => print("安装模拟加载完成触发 执行成功 => $value"));
   }
 
   void onLoadStop(InAppWebViewController controller, String url) {
@@ -409,6 +431,13 @@ class WebviewHackController {
 
   dynamic _onEcho(List<dynamic> args) {
     print("[ECHO] ===> $args");
+    return "";
+  }
+
+  dynamic _onMockPageFinish(List<dynamic> args) {
+    // TODO: 加载完成
+    print("模拟加载完成 =====>");
+    _webcontroller.stopLoading();
     return "";
   }
 
