@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -42,7 +43,7 @@ class H5PasswordTaobaoLoginPage extends TaobaoLoginPage {
     _progress = 0;
   }
   
-  open(BuildContext context, { bool smsMode = true, Map<String, dynamic> config, Function(Map<String, dynamic> data) onLoginSubmit }) {
+  open(BuildContext context, {bool isRecent = false, bool smsMode = true, Map<String, dynamic> config, Function(Map<String, dynamic> data) onLoginSubmit }) {
 
     // open a new web page
     Navigator.push(context, MaterialPageRoute(
@@ -60,8 +61,8 @@ class H5PasswordTaobaoLoginPage extends TaobaoLoginPage {
         body: WebviewHack(
           builder: (context, hacker) {
             return TaobaoWebview(
-              useMobile: true,
-              initialUrl: H5PageUrls.login,
+              useMobile: false, // TODO: why???
+              initialUrl: isRecent ? H5PageUrls.mhome : H5PageUrls.login,
               onWebViewCreated: (controller) {
                 hacker?.onWebViewCreated(controller);
 
@@ -86,7 +87,6 @@ class H5PasswordTaobaoLoginPage extends TaobaoLoginPage {
 
                   AccountInfo info = config!=null?AccountInfo.fromJson(config):null;
                   
-
                   // 如果是短信模式，切换至
                   if (smsMode || (info != null && info.smsMode)) {
                     Future.delayed(Duration(milliseconds: 50), () {
@@ -173,10 +173,40 @@ class H5PasswordTaobaoLoginPage extends TaobaoLoginPage {
                 }
 
                 if (H5PageUrls.isHome(url)) {
-                  print("[taobao page] guess we have login success => $url");
-                  _isLogon = true;
-                  onUserLogon?.call(null);
-                  Navigator.pop(context);
+                  // 如果是最近使用就直接请求主页，并在加载完成后判断是否需要重新登录
+                  // 判断是否有login frame，或者登录信息不符合预期 如果有的话也是未登录
+                  // if (!isRecent) {
+                  //   // nononono
+                  //   // 由于不是最近登录的帐号，直接跳转登录
+                  //   controller.loadUrl(url: H5PageUrls.login);
+                  //   return;
+                  // }
+                  
+                  controller.evaluateJavascript(source: """
+                    var _frms = document.querySelectorAll("iframe");
+                    for (var i; i<_frms-1;i++) {
+                      if (_frms[i].src.indexOf("login.m.taobao.com") >= 0) {
+                        return "true";
+                      }
+                    }
+                    return "";
+                  """).then((value) {
+                    // 有登录窗口或者数据登录名不是想要的
+                    if (value == "true") {
+                      // 需要登录
+                      print("需要登录，跳转到登录页面");
+                      controller.loadUrl(url: H5PageUrls.login);
+                    } else {
+                      // 不需要登录
+                      print("[taobao page] guess we have login success => $url");
+                      _isLogon = true;
+                      onUserLogon?.call(null);
+                      Navigator.pop(context);
+                    }
+                  }).catchError((e) {
+                    print("判断是否是登录页错误: $e");
+                  });
+
                 }
               },
               onProgressChanged: (_, v) {

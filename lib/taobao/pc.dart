@@ -55,6 +55,7 @@ class PCWeb {
       onLoadStop: (controller, url) {
         _wc = controller;
         // check verify code
+        // TODO: 有时候验证过后好像并没有重新触发这里 20210130
         if (url.indexOf("_____tmd_____/verify") > 0) {
           print("[page taobao order] verify code, need to reload");
           // just reload
@@ -65,9 +66,10 @@ class PCWeb {
           return;
         }
       },
-      options: PageOptions(useMobile: true),
+      options: PageOptions(useMobile: false), // why we need to use phone mode?
     ).then((value) {
       // check verify code
+      print(" 订单数据 =======> $value");
       if (value["rgv587_flag"]=="sm" && value["url"]!="" && value["url"].indexOf("_____tmd_____") > 0) {
         // we nee to show web, how to pass the page instance out
         // TODO: sometime we don't display verify page on webview, but get error data in api.
