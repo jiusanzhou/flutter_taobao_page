@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:collection';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -16,10 +17,23 @@ class ActionJob {
   bool noLogin;
   bool isAsync;
 
+  // 直接请求原始数据
+  bool headless;
+  bool json;
+
+  dynamic body;
+
   // bind page for this action
   // Page page; , @required this.page
 
-  ActionJob(this.url, { this.code, this.noLogin: false, this.isAsync: true });
+  ActionJob(this.url, {
+    this.code,
+    this.noLogin: false,
+    this.isAsync: true,
+    this.headless: false,
+    this.json: false,
+    this.body,
+  });
 }
 
 class PageOptions {
@@ -44,6 +58,12 @@ class PageOptions {
   // use mobile mode or not
   bool useMobile;
 
+  // method
+  String method;
+  Map<String, String> headers;
+  dynamic pattern;
+  bool gbk;
+
   PageOptions({
     this.keepalive: false,
     this.visible: false,
@@ -53,6 +73,10 @@ class PageOptions {
     this.refresh: false,
     this.blockers: const [],
     this.useMobile: false, // we need to set for webviewpage
+    this.method: "GET",
+    this.headers,
+    this.pattern,
+    this.gbk: false,
   });
 }
 

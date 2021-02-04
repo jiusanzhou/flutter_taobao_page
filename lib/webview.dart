@@ -107,15 +107,15 @@ class _TaobaoWebviewState extends State<TaobaoWebview> with AutomaticKeepAliveCl
       initialOptions: InAppWebViewGroupOptions(
         crossPlatform: InAppWebViewOptions(
           javaScriptEnabled: true,
-          debuggingEnabled: false,
+          debuggingEnabled: true,
           contentBlockers: widget.blockers,
           preferredContentMode: widget.useMobile ? UserPreferredContentMode.MOBILE:UserPreferredContentMode.DESKTOP,
-          userAgent: widget.useMobile ? UA_IOS : UA_PC// we need to set correct ua for page to load
+          // userAgent: widget.useMobile ? UA_IOS : UA_PC// we need to set correct ua for page to load
         ),
         android: AndroidInAppWebViewOptions(
           useWideViewPort: true,
           domStorageEnabled: true,
-          hardwareAcceleration: true,
+          hardwareAcceleration: false,
           // useHybridComposition: true,
         ),
       ),

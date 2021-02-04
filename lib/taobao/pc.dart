@@ -1,3 +1,6 @@
+import 'dart:convert';
+
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_taobao_page/action_page.dart';
 import 'package:flutter_taobao_page/taobao_page.dart';
 
@@ -19,12 +22,68 @@ class PCWeb {
     return controller.doAction(userBaseInfoAction);
   }
 
+  Future<dynamic> accountProfile2() {
+    return controller.doAction(
+      ActionJob(
+        PCPageUrls.accountProfile,
+        headless: true,
+      ),
+      options: PageOptions(
+        pattern: {
+          "realname": "#ah\\:addressForm > li:nth-child(1) > strong@text",
+          "email": "#ah\\:addressForm > li:nth-child(2) > strong@text",
+          "gender": "#ah\\:addressForm > li:nth-child(3) > input[type='hidden']@value",
+          "birth": [
+            "#ah\\:addressForm > li:nth-child(4) > input:nth-child(2)@value",
+            "#ah\\:addressForm > li:nth-child(4) > input:nth-child(3)@value",
+            "#ah\\:addressForm > li:nth-child(4) > input:nth-child(4)@value",
+          ],
+        },
+      ),
+    );
+  }
+
   Future<dynamic> accountProfile() {
     return controller.doAction(accountProfileAction);
   }
 
+  Future<dynamic> accountSecurity2() {
+    return controller.doAction(
+      ActionJob(
+        PCPageUrls.accountSecurity,
+        headless: true,
+      ),
+      options: PageOptions(
+        pattern: [
+          "#main-content > dl > dd:nth-child(2) > ul > li:nth-child(1) > span:nth-child(2)@text",
+          "#main-content > dl > dd:nth-child(2) > ul > li:nth-child(2) > span:nth-child(2)@text",
+          "#main-content > dl > dd:nth-child(2) > ul > li:nth-child(4) > span:nth-child(2)@text",
+        ],
+      ),
+    );
+  }
+
   Future<dynamic> accountSecurity() {
     return controller.doAction(accountSecurityAction);
+  }
+
+  Future<dynamic> certityInfo2() {
+    return controller.doAction(
+      ActionJob(
+        PCPageUrls.certityInfo,
+        headless: true,
+      ),
+      options: PageOptions(
+        pattern: [
+          "#main-content > div > div.certify-info > div.msg-box-content > div.explain-info:nth-child(2) > div",
+          "#main-content > div > div.certify-info > div.msg-box-content > div.explain-info:nth-child(3) > div",
+          "#main-content > div > div.certify-info > div.msg-box-content > div.explain-info:nth-child(4) > div",
+          "#main-content > div > div.certify-info > div.msg-box-content > div.explain-info:nth-child(5) > div",
+          "#main-content > div > div.certify-info > div.msg-box-content > div.explain-info:nth-child(6) > div",
+          "#main-content > div > div.certify-info > div.msg-box-content > div.explain-info:nth-child(7) > div",
+        ],
+      ),
+    );
   }
 
   Future<dynamic> certityInfo() {
@@ -33,6 +92,32 @@ class PCWeb {
 
   Future<dynamic> vipScore() {
     return controller.doAction(vipScoreAction, options: PageOptions(timeout: const Duration(seconds: 10)));
+  }
+
+  Future<dynamic> vipScoreApi() {
+    return controller.doAction(
+      ActionJob(
+        "https://vip.taobao.com/ajax/getGoldUser.do?_input_charset=utf-8&from=diaoding",
+        headless: true,
+        json: true,
+      )
+    );
+  }
+
+  Future<dynamic> rateScore2() {
+    return controller.doAction(
+      ActionJob(
+        PCPageUrls.rateScore,
+        headless: true,
+      ),
+      options: PageOptions(
+        pattern: [
+          "#new-rate-content > div.clearfix.personal-info > div.personal-rating > table:nth-child(7) > tbody > tr:nth-child(1) > td",
+          "#new-rate-content > div.clearfix.personal-info > div.personal-rating > table:nth-child(7) > tbody > tr:nth-child(1) > td > img@src",
+          "#new-rate-content > div.clearfix.personal-info > div.personal-rating > table:nth-child(7) > tbody > tr:nth-child(2) > td",
+        ],
+      ),
+    );
   }
 
   Future<dynamic> rateScore() {
@@ -47,9 +132,46 @@ class PCWeb {
     return controller.doAction(disputeAction);
   }
 
+  // 
+
+  Future<dynamic> orderBotApi(int page, {int count = 20, String type = "", bool isAsync = false, Function() onVerifyConfirm}) {
+    return controller.doAction(
+      ActionJob(
+        "https://ai.alimebot.taobao.com/order/parentList",
+        body: "pageNum=$page&pageSize=$count",
+        headless: true,
+        json: true,
+      ),
+    );
+  }
+
+  Future<dynamic> orderApi(int page, {int count = 20, String type = "", bool isAsync = false, Function() onVerifyConfirm}) {
+    return controller.doAction(
+      ActionJob(
+        "https://buyertrade.taobao.com/trade/itemlist/asyncBought.htm?action=itemlist/BoughtQueryAction&event_submit_do_query=1&_input_charset=utf8&tabCode=",
+        body: "pageNum=$page&pageSize=$count",
+        headless: true,
+        json: true,
+      ),
+      options: PageOptions(
+        method: "POST",
+        headers: {
+          "content-type": "application/x-www-form-urlencoded; charset=UTF-8",
+          "referer": "https://buyertrade.taobao.com/trade/itemlist/list_bought_items.htm",
+        },
+      ),
+    ).then((value) {
+      if (value["rgv587_flag"]=="sm" && value["url"]!="" && value["url"].indexOf("_____tmd_____") > 0) {
+        // 有验证码
+        return Future.error(value["url"]);
+      }
+      return value;
+    });
+  }
+
   // we need to check if we has verify code
   Future<dynamic> order(int page, {int count = 20, String type = "", bool isAsync = false, Function() onVerifyConfirm}) {
-    var _wc;
+    InAppWebViewController _wc;
     return controller.doAction(
       ActionJob(PCPageUrls.order, code: PCCode.order(page, count: count, type: type), isAsync: isAsync),
       onLoadStop: (controller, url) {
@@ -73,8 +195,10 @@ class PCWeb {
       if (value["rgv587_flag"]=="sm" && value["url"]!="" && value["url"].indexOf("_____tmd_____") > 0) {
         // we nee to show web, how to pass the page instance out
         // TODO: sometime we don't display verify page on webview, but get error data in api.
-        _wc.loadUrl(url: value["url"]);
-        return Future.error("verify_code");
+        
+        // 返回验证码链接
+        // _wc.loadUrl(url: value["url"]);
+        return Future.error(value["url"]);
       }
       return value;
     });

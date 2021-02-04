@@ -35,6 +35,14 @@ class H5API {
   Future<dynamic> vipScore() {
     return  controller.doAction(ActionJob(H5PageUrls.home, code: H5APICode.vipScore()));
   }
+
+  Future<dynamic> aliStardDimensionDatadisputeList() {
+    return  controller.doAction(ActionJob(H5PageUrls.home, code: H5APICode.aliStardDimensionData()));
+  }
+
+  Future<dynamic> disputeList() {
+    return  controller.doAction(ActionJob(H5PageUrls.home, code: H5APICode.disputeList()));
+  }
 }
 
 class H5APICode {
@@ -55,12 +63,27 @@ class H5APICode {
     }""");
   }
 
+  // 订单列表
+  static String myOrder({int page: 1}) {
+    return _basicRequest("mtop.order.queryboughtlist", "2.0", """{
+      from:$page,
+    }""");
+  }
+
   // 订单详情
   static String orderDetail(String orderId) {
     return _basicRequest("mtop.order.querydetail", "4.0", """{
       appVersion:'1.0',
       appName:'tborder',
       bizOrderId:'$orderId'
+    }""");
+  }
+
+  // 退款/售后
+  static String disputeList({int page: 1}) {
+    return _basicRequest("mtop.alibaba.refundface2.disputeservice.renderdisputelist.h5", "3.0", """{
+      "tabId":null,"sellerId":null,"requestFrom":null,
+      curPage:$page,
     }""");
   }
 
@@ -79,6 +102,15 @@ class H5APICode {
       "mtop.vip.gold.user.customize",
       "1.0", 
       """{"source":"vipDayNew"}""",
+    );
+  }
+
+  // 信用评级
+  static String aliStardDimensionData() {
+    return _basicRequest(
+      "mtop.taobao.alistar.dimensions.getdata",
+      "1.0", 
+      """{"ids":"{\\"dimensions\\":[3,0,1,2]}","from":"TB"}""",
     );
   }
 

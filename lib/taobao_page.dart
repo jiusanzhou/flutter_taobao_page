@@ -1,6 +1,10 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:http/http.dart' as http;
+
 import 'package:flutter_taobao_page/action_page.dart';
 import 'package:flutter_taobao_page/event.dart';
 import 'package:flutter_taobao_page/login.dart';
@@ -9,6 +13,142 @@ import 'package:flutter_taobao_page/taobao/h5.dart';
 import 'package:flutter_taobao_page/taobao/pc.dart';
 import 'package:flutter_taobao_page/utils.dart';
 import 'package:flutter_taobao_page/webview.dart';
+import 'package:universal_html/html.dart';
+import 'package:universal_html/parsing.dart';
+import 'package:gbk2utf8/gbk2utf8.dart';
+
+class ParserPattern {
+
+  final dynamic pattern;
+
+  // the real single one
+  String _realPattern;
+  // value func
+  String _valfn = "text";
+
+  ParserPattern _singlePattern;
+  List<ParserPattern> _arrayPatterns;
+  Map<String, ParserPattern> _mapPatterns;
+
+  ParserPattern(this.pattern) {
+    if (pattern is String) {
+        _singlePattern = this;
+        _realPattern = pattern as String;
+        var parts = _realPattern.split("@");
+        if (parts.length < 2) {
+          return;
+        }
+        _realPattern = parts[0];
+        _valfn = parts[1];
+    }
+
+    if (pattern is List) {
+        _arrayPatterns = (pattern as List).map((e) => ParserPattern(e)).toList();
+        return;
+    }
+
+    if (pattern is Map) {
+      _mapPatterns = (pattern as Map).map((k, v) => MapEntry(k, ParserPattern(v)));
+      return;
+    }
+    
+    print("Pattern type is ${pattern.runtimeType}");
+  }
+
+  dynamic _genVal(HtmlElement ele) {
+    if (ele == null) return;
+    switch (_valfn) {
+      case "text":
+        return ele.text;
+        break;
+      case "innerText":
+        return ele.innerText;
+      case "html":
+      case "innerHtml":
+        return ele.innerHtml;
+      default:
+        return ele.getAttribute(_valfn);
+    }
+  }
+
+  dynamic parse(HtmlElement ele) {
+    // try each one to parse
+    if (_singlePattern != null) {
+      var e = ele.querySelector(_realPattern);
+      return _genVal(e);
+      // take value out
+    }
+
+    if (_arrayPatterns != null) {
+      return _arrayPatterns.map((e) => e.parse(ele)).toList();
+    }
+
+    if (_mapPatterns != null) {
+      return _mapPatterns.map((k, v) => MapEntry(k, v.parse(ele)));
+    }
+
+    return null;
+  }
+
+}
+class Parser {
+
+  // type: jsonpath, xpath, css
+
+  // map array
+  final dynamic pattern;
+
+  ParserPattern _parserPattern;
+
+  Parser(this.pattern) {
+    _parserPattern = ParserPattern(pattern);
+  }
+
+  dynamic parse(String content) {
+    return _parserPattern.parse(parseHtmlDocument(content).documentElement);
+  }
+}
+
+
+class HttpClient extends http.BaseClient {
+  http.Client _httpcli;
+
+  HttpClient() {
+    _httpcli = http.Client();
+  }
+
+  Future<http.StreamedResponse> send(http.BaseRequest request) async {
+    request.headers['cookie'] = await CookieManager.instance().getCookies(url: request.url.toString()).then((ck) {
+      return ck.map((e) => "${e.name}=${e.value}").join(";");
+    });
+    if (request.headers['user-agent']!=null) request.headers['user-agent'] = UA_PC;
+    return _httpcli.send(request);
+  }
+
+  Future<http.Response> request(String method, String url, {
+    bool useMobile = false,
+    Map<String, String> headers,
+    body,
+    Encoding encoding,
+  }) {
+    if (headers == null) headers = {};
+    if (headers['user-agent']==null) {
+      headers['user-agent'] = useMobile ? UA_IOS : UA_PC;
+    }
+
+    switch (method) {
+      case "get":
+      case "GET":
+        return this.get(url, headers: headers);
+        break;
+      case 'post':
+      case 'POST':
+        return this.post(url, headers: headers, body: body, encoding: encoding);
+      default:
+        return this.noSuchMethod(null);
+    }
+  }
+}
 
 class TaobaoPage extends StatefulWidget {
 
@@ -62,6 +202,8 @@ class _TaobaoPageState extends State<TaobaoPage>
     _controller = TaobaoPageController._(this);
     // we need to subscribe event in this function
     widget.onCreated?.call(_controller);
+
+    // CookieManager.instance().getCookies(url: null);
   }
 
   @override
@@ -163,6 +305,8 @@ class TaobaoPageController {
 
   EventBus _eventBus;
 
+  HttpClient _httpcli;
+
   // is login
   PCWeb pcweb;
   H5API h5api;
@@ -172,6 +316,7 @@ class TaobaoPageController {
   ) {
 
     _eventBus = EventBus();
+    _httpcli = HttpClient();
 
     // TODO: start timer to clean inactive page
     pcweb = PCWeb(this);
@@ -223,6 +368,32 @@ class TaobaoPageController {
       PageOptions options,
     }
   ) async {
+
+    if (options==null) options = PageOptions();
+
+    // 如果是headless模式，就使用client直接发送请求
+    // 但是很明显，action是不一样的
+    if (action.headless) {
+      return _httpcli.request(
+        options.method,
+        action.url,
+        body: action.body,
+        useMobile: options.useMobile,
+        headers: options.headers,
+      ).then((v) {
+        // 编码处理
+        var content = v.body;
+        if (options.gbk || v.headers["content-type"].toLowerCase().contains("gbk")) {
+          content = gbk.decode(v.bodyBytes);
+        }
+
+        if (action.json) {
+          return json.decode(content);
+        } else {
+          return options.pattern == null ? content : Parser(options.pattern).parse(content);
+        }
+      });
+    }
     
     // check if we are already login
     if (!_state._isLogon && !action.noLogin) return Future.error("not account login");
@@ -234,6 +405,7 @@ class TaobaoPageController {
     if (curp != null) return curp.doAction(action);
 
     // open a new page to do this action
+    // 这里是核心，打开页面然后做动作
     return openPage(
       action.url,
       options: options,

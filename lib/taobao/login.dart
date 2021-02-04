@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:http/http.dart' as http;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_taobao_page/login.dart';
@@ -26,13 +28,38 @@ class AccountInfo {
   }
 }
 
+class HttpClient extends http.BaseClient {
+  http.Client _httpcli;
+
+  HttpClient() {
+    _httpcli = http.Client();
+  }
+
+  Future<http.StreamedResponse> send(http.BaseRequest request) async {
+    request.headers['user-agent'] = UA_IOS;
+    request.headers['cookie'] = await CookieManager.instance().getCookies(url: URLCheckSession).then((ck) {
+      return ck.map((e) => "${e.name}=${e.value}").join(";");
+    });
+    print("====> cookie: ${request.headers['cookie']}");
+    return _httpcli.send(request);
+  }
+}
+
+// 判断是否需要登录: FAIL_SYS_SESSION_EXPIRED::Session过期
+const URLCheckSession = "https://h5api.m.taobao.com/h5/mtop.taobao.mclaren.index.data.get.h5/1.0/?jsv=2.5.1&appKey=12574478&t=&sign=&api=mtop.taobao.mclaren.index.data.get.h5&v=1.0&ttid=2018%40taobao_iphone_9.9.9&isSec=0&ecode=1&timeout=5000&AntiFlood=true&AntiCreep=true&H5Request=true&LoginRequest=true&needLogin=true&type=json&dataType=json&data=%7B%22mytbVersion%22%3A%224.0.1%22%2C%22moduleConfigVersion%22%3A-1%2C%22dataConfigVersion%22%3A-1%2C%22requestType%22%3A1%7D";
+
+
 class H5PasswordTaobaoLoginPage extends TaobaoLoginPage {
 
   final void Function(dynamic data) onUserLogon;
   final void Function(String url) onLoginPageOpend;
+  HttpClient _cli;
 
-  H5PasswordTaobaoLoginPage({this.onUserLogon, this.onLoginPageOpend});
 
+  H5PasswordTaobaoLoginPage({this.onUserLogon, this.onLoginPageOpend}) {
+    _cli = HttpClient();
+  }
+      
   bool _isLogon = false;
   double _progress = 0;
 
@@ -43,7 +70,26 @@ class H5PasswordTaobaoLoginPage extends TaobaoLoginPage {
     _progress = 0;
   }
   
-  open(BuildContext context, {bool isRecent = false, bool smsMode = true, Map<String, dynamic> config, Function(Map<String, dynamic> data) onLoginSubmit }) {
+  open(BuildContext context, {bool isRecent = false, bool smsMode = true, Map<String, dynamic> config, Function(Map<String, dynamic> data) onLoginSubmit }) async {
+
+    // TODO: 使用其他 widget 显示加载中的状态
+    // 先判断是否需要登录
+
+    if (isRecent) {
+      print("是最近的帐号登录，可以先检查是否cookie有效");
+      bool expired = await _cli.get(URLCheckSession).then((res) {
+        print("====> ${res.body}");
+        return res.body.contains("FAIL_SYS_SESSION_EXPIRED");
+      });
+
+      if (!expired) {
+        // 没有过期 就直接返回验证通过
+        print("没有过期，直接返回登录成功");
+        _isLogon = true;
+        onUserLogon?.call(null);
+        return;
+      }
+    }
 
     // open a new web page
     Navigator.push(context, MaterialPageRoute(
@@ -61,8 +107,10 @@ class H5PasswordTaobaoLoginPage extends TaobaoLoginPage {
         body: WebviewHack(
           builder: (context, hacker) {
             return TaobaoWebview(
-              useMobile: false, // TODO: why???
-              initialUrl: isRecent ? H5PageUrls.mhome : H5PageUrls.login,
+              useMobile: true, // TODO: vivo部分机型使用 mobile 会出现加载超时,不true的话又没法登录??
+              // 必须通过mhome来判断？有诶有其他方式判断是否需要重新登录
+              // 必须实现headless模式 ?
+              initialUrl: H5PageUrls.login,
               onWebViewCreated: (controller) {
                 hacker?.onWebViewCreated(controller);
 
@@ -79,6 +127,7 @@ class H5PasswordTaobaoLoginPage extends TaobaoLoginPage {
               },
               onLoadStop: (controller, url) {
                 hacker?.onLoadStop(controller, url);
+
                 if (H5PageUrls.isLogin(url)) {
                   // has login page
                   print("[taobao page] has login page");
@@ -172,40 +221,42 @@ class H5PasswordTaobaoLoginPage extends TaobaoLoginPage {
                   }
                 }
 
-                if (H5PageUrls.isHome(url)) {
-                  // 如果是最近使用就直接请求主页，并在加载完成后判断是否需要重新登录
-                  // 判断是否有login frame，或者登录信息不符合预期 如果有的话也是未登录
-                  // if (!isRecent) {
-                  //   // nononono
-                  //   // 由于不是最近登录的帐号，直接跳转登录
-                  //   controller.loadUrl(url: H5PageUrls.login);
-                  //   return;
-                  // }
+                if (H5PageUrls.isHome(url)){
                   
-                  controller.evaluateJavascript(source: """
-                    var _frms = document.querySelectorAll("iframe");
-                    for (var i; i<_frms-1;i++) {
-                      if (_frms[i].src.indexOf("login.m.taobao.com") >= 0) {
-                        return "true";
-                      }
-                    }
-                    return "";
-                  """).then((value) {
-                    // 有登录窗口或者数据登录名不是想要的
-                    if (value == "true") {
-                      // 需要登录
-                      print("需要登录，跳转到登录页面");
-                      controller.loadUrl(url: H5PageUrls.login);
-                    } else {
-                      // 不需要登录
-                      print("[taobao page] guess we have login success => $url");
-                      _isLogon = true;
-                      onUserLogon?.call(null);
-                      Navigator.pop(context);
-                    }
-                  }).catchError((e) {
-                    print("判断是否是登录页错误: $e");
-                  });
+                  print("[taobao page] guess we have login success => $url");
+                  _isLogon = true;
+                  onUserLogon?.call(null);
+                  Navigator.pop(context);
+
+                  // controller.evaluateJavascript(source: """
+                  //   var v = "false";
+                  //   var _frms = document.querySelectorAll("iframe");
+                  //   for (var i=0; i<_frms.length-1;i++) {
+                  //     if (_frms[i].src && _frms[i].src.indexOf("login.m.taobao.com") >= 0) {
+                  //       break;
+                  //     }
+                  //   }
+                  //   v = "true";
+                  //   v;
+                  // """).then((value) {
+                  //   print("判断Cookie是否有效: $value");
+                  //   // 有登录窗口或者数据登录名不是想要的
+                  //   if (value == "true") {
+                  //     // 不需要登录
+                  //   } else {
+                  //     // 需要登录
+                  //     onLoginPageOpend?.call(url);
+                  //     print("需要登录，跳转到登录页面");
+                  //     var rr = "https%3A%2F%2Fh5.m.taobao.com%2Fother%2Floginend.html%3Forigin%3Dhttps%253A%252F%252Fh5.m.taobao.com";
+                  //     controller.evaluateJavascript(source:
+                  //     "window.location.href='${H5PageUrls.login}?redirectURL=$rr'; '__ load to login'").then((value) {
+                  //       print("重新加载登录页: $value");
+                  //     });
+                  //     // controller.loadUrl(url: H5PageUrls.login);
+                  //   }
+                  // }).catchError((e) {
+                  //   print("判断是否是登录页错误: $e");
+                  // });
 
                 }
               },
