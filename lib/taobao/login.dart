@@ -219,9 +219,18 @@ class H5PasswordTaobaoLoginPage extends TaobaoLoginPage {
                       controller.evaluateJavascript(source: code).then((value) => print("填充密码执行成功: $value"));
                     });
                   }
+
+                  return;
                 }
 
-                if (H5PageUrls.isHome(url)){
+                if (url.contains("h_5_expired.htm")) {
+                  // 需要怎么办???
+                  // reload to home page?
+                  return;
+                }
+
+                // 有时候会出现 https://passport.taobao.com/iv/static/h_5_expired.htm
+                if (H5PageUrls.isHome(url)) {
                   
                   print("[taobao page] guess we have login success => $url");
                   _isLogon = true;
@@ -264,11 +273,11 @@ class H5PasswordTaobaoLoginPage extends TaobaoLoginPage {
                 hacker?.onProcessChange(_, v);
               },
               blockers: [
-                getPatternBlocker("um\.js\$"),
-                getPatternBlocker("\.gif\$"),
-                // "gm\.mmstat\.com|ynuf\.aliapp\.org|\.gif\$",
-                getPatternBlocker("gm\.mmstat\.com"),
-                getPatternBlocker("ynuf\.aliapp\.org"),
+                // getPatternBlocker("um\.js\$"),
+                // getPatternBlocker("\.gif\$"),
+                // // "gm\.mmstat\.com|ynuf\.aliapp\.org|\.gif\$",
+                // getPatternBlocker("gm\.mmstat\.com"),
+                // getPatternBlocker("ynuf\.aliapp\.org"),
               ],
             );
           }
