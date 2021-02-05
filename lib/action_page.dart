@@ -62,6 +62,7 @@ class PageOptions {
   String method;
   Map<String, String> headers;
   dynamic pattern;
+  bool isRegex;
   bool gbk;
 
   PageOptions({
@@ -77,6 +78,7 @@ class PageOptions {
     this.headers,
     this.pattern,
     this.gbk: false,
+    this.isRegex: false
   });
 }
 

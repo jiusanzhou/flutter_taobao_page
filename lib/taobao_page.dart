@@ -40,6 +40,7 @@ class ParserPattern {
         }
         _realPattern = parts[0];
         _valfn = parts[1];
+        return;
     }
 
     if (pattern is List) {
@@ -52,7 +53,7 @@ class ParserPattern {
       return;
     }
     
-    print("Pattern type is ${pattern.runtimeType}");
+    print("Error: Pattern type is ${pattern.runtimeType}");
   }
 
   dynamic _genVal(HtmlElement ele) {
@@ -97,14 +98,24 @@ class Parser {
 
   // map array
   final dynamic pattern;
+  final bool isRegex;
 
   ParserPattern _parserPattern;
+  RegExp _regexp;
 
-  Parser(this.pattern) {
-    _parserPattern = ParserPattern(pattern);
+  bool get _isRegex => pattern is String && isRegex;
+
+  Parser(this.pattern, { this.isRegex: false }) {
+    if (_isRegex) {
+      _regexp = RegExp(this.pattern);
+    } else {
+      _parserPattern = ParserPattern(pattern);
+    }
   }
 
   dynamic parse(String content) {
+    // TODO: 
+    if (_isRegex) return _regexp.firstMatch(content).group(1);
     return _parserPattern.parse(parseHtmlDocument(content).documentElement);
   }
 }
@@ -390,7 +401,7 @@ class TaobaoPageController {
         if (action.json) {
           return json.decode(content);
         } else {
-          return options.pattern == null ? content : Parser(options.pattern).parse(content);
+          return options.pattern == null ? content : Parser(options.pattern, isRegex: options.isRegex).parse(content);
         }
       });
     }

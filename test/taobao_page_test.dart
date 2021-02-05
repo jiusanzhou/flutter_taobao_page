@@ -41,12 +41,26 @@ void main() {
     print(data);
   });
   test('account myRate html', () {
-    var content = File('data/myRate.htm').readAsStringSync();
-    var data = Parser([
-        "#new-rate-content > div.clearfix.personal-info > div.personal-rating > table:nth-child(7) > tbody > tr:nth-child(1) > td",
-        "#new-rate-content > div.clearfix.personal-info > div.personal-rating > table:nth-child(7) > tbody > tr:nth-child(1) > td > img@src",
-        "#new-rate-content > div.clearfix.personal-info > div.personal-rating > table:nth-child(7) > tbody > tr:nth-child(2) > td",
-    ]).parse(content);
+    var content = File('data/myRate2.htm').readAsStringSync();
+    var data = Parser({
+      "seller": [
+        // 是卖家的情况
+        "#new-rate-content > div.personal-info > div.personal-rating > table:nth-child(7) > tbody > tr:nth-child(1) > td",
+        "#new-rate-content > div.personal-info > div.personal-rating > table:nth-child(7) > tbody > tr:nth-child(1) > td > img@src",
+        "#new-rate-content > div.personal-info > div.personal-rating > table:nth-child(7) > tbody > tr:nth-child(2) > td",
+      ],
+      "only-buyer": [
+        // 是买家的情况
+        "#new-rate-content > div.personal-info > div.personal-rating > table:nth-child(4) > tbody > tr:nth-child(1) > td",
+        "#new-rate-content > div.personal-info > div.personal-rating > table:nth-child(4) > tbody > tr:nth-child(1) > td > img@src",
+        "#new-rate-content > div.personal-info > div.personal-rating > table:nth-child(4) > tbody > tr:nth-child(1) > td",
+      ]
+    }).parse(content);
+    print(data);
+  });
+  test('account dispute html', () {
+    var content = File('data/buyerDisputeList.htm').readAsStringSync();
+    var data = Parser("var disputeData =(.+);", isRegex: true).parse(content);
     print(data);
   });
 }

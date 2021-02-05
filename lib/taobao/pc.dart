@@ -111,11 +111,20 @@ class PCWeb {
         headless: true,
       ),
       options: PageOptions(
-        pattern: [
-          "#new-rate-content > div.clearfix.personal-info > div.personal-rating > table:nth-child(7) > tbody > tr:nth-child(1) > td",
-          "#new-rate-content > div.clearfix.personal-info > div.personal-rating > table:nth-child(7) > tbody > tr:nth-child(1) > td > img@src",
-          "#new-rate-content > div.clearfix.personal-info > div.personal-rating > table:nth-child(7) > tbody > tr:nth-child(2) > td",
-        ],
+        pattern: {
+          "seller": [
+            // 是卖家的情况
+            "#new-rate-content > div.personal-info > div.personal-rating > table:nth-child(7) > tbody > tr:nth-child(1) > td",
+            "#new-rate-content > div.personal-info > div.personal-rating > table:nth-child(7) > tbody > tr:nth-child(1) > td > img@src",
+            "#new-rate-content > div.personal-info > div.personal-rating > table:nth-child(7) > tbody > tr:nth-child(2) > td",
+          ],
+          "only-buyer": [
+            // 是买家的情况
+            "#new-rate-content > div.personal-info > div.personal-rating > table:nth-child(4) > tbody > tr:nth-child(1) > td",
+            "#new-rate-content > div.personal-info > div.personal-rating > table:nth-child(4) > tbody > tr:nth-child(1) > td > img@src",
+            "#new-rate-content > div.personal-info > div.personal-rating > table:nth-child(4) > tbody > tr:nth-child(1) > td",
+          ]
+        },
       ),
     );
   }
@@ -126,6 +135,23 @@ class PCWeb {
 
   Future<dynamic> aliStar() {
     return controller.doAction(aliStarAction);
+  }
+
+  //"var disputeData = (.+}}) ;", isRegex: true
+
+  Future<dynamic> dispute2() {
+    return  controller.doAction(
+      ActionJob(
+        PCPageUrls.dispute,
+        headless: true,
+      ),
+      options: PageOptions(
+        pattern: "var disputeData =(.+);",
+        isRegex: true,
+      ),
+    ).then((v) {
+      return json.decode(v);
+    });
   }
 
   Future<dynamic> dispute() {
