@@ -79,7 +79,7 @@ class _MyHomePageState extends State<MyHomePage> {
       _busy = true;
     });
     int _page = _currentPages[type] ?? 0;
-    _controller.pcweb.order(_page + 1, count: 5, type: type).then((data) {
+    _controller.pcweb.order(context, page: _page + 1, count: 5, type: type).then((data) {
       if (_allOrders[type] == null) _allOrders[type] = [];
     
       setState(() {
@@ -273,7 +273,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void _loadTradeDetail(String orderId) async {
     print("===> 即将获取订单物流详情 $orderId");
-    _controller.h5api.logisDetail(orderId).then((value) {
+    _controller.h5api.logisDetail(context, orderId).then((value) {
       print("得到订单物流详情 $value");
       _transDataController.add(value);
     }).catchError((e) {

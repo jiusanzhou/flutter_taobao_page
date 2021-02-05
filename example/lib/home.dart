@@ -116,55 +116,55 @@ class _HomePageState extends State<HomePage> {
     //   index += 1;
     // });
 
-    _controller.pcweb.userBaseInfo().then((value) {
+    _controller.pcweb.userBaseInfo(context).then((value) {
       print("[1] user base info => $value");
     }).catchError((e) {
       print("[error] use base unfo => $e");
     });
 
-    _controller.pcweb.accountProfile().then((value) {
+    _controller.pcweb.accountProfile(context).then((value) {
       print("[2] account profile => $value");
     }).catchError((e) {
       print("[error] account profile => $e");
     });
 
-    _controller.pcweb.accountSecurity().then((value) {
+    _controller.pcweb.accountSecurity(context).then((value) {
       print("[3] account security => $value");
     }).catchError((e) {
       print("[error] account security => $e");
     });
 
-    _controller.pcweb.certityInfo().then((value) {
+    _controller.pcweb.certityInfo(context).then((value) {
       print("[4] certityInfo => $value");
     }).catchError((e) {
       print("[error] certityInfo => $e");
     });
 
-    _controller.pcweb.aliStar().then((value) {
+    _controller.pcweb.aliStar(context).then((value) {
       print("[5] aliStar => $value");
     }).catchError((e) {
       print("[error] aliStar => $e");
     });
 
-    _controller.pcweb.vipScore().then((value) {
+    _controller.pcweb.vipScore(context).then((value) {
       print("[6] vipScore => $value");
     }).catchError((e) {
       print("[error] vipScore => $e");
     });
 
-    _controller.pcweb.rateScore().then((value) {
+    _controller.pcweb.rateScore(context).then((value) {
       print("[7] rateScore => $value");
     }).catchError((e) {
       print("[error] rateScore => $e");
     });
 
-    _controller.pcweb.dispute().then((value) {
+    _controller.pcweb.dispute(context).then((value) {
       print("[8] dispute => $value");
     }).catchError((e) {
       print("[error] dispute => $e");
     });
 
-    _controller.pcweb.order(1).then((value) {
+    _controller.pcweb.order(context, page: 1).then((value) {
       print("[9] order => $value");
     }).catchError((e) {
       print("[error] order => $e");

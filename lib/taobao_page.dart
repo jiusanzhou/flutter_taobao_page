@@ -13,12 +13,11 @@ import 'package:flutter_taobao_page/taobao/h5.dart';
 import 'package:flutter_taobao_page/taobao/pc.dart';
 import 'package:flutter_taobao_page/utils.dart';
 import 'package:flutter_taobao_page/webview.dart';
-import 'package:universal_html/html.dart';
+import 'package:universal_html/html.dart' as html;
 import 'package:universal_html/parsing.dart';
 import 'package:gbk2utf8/gbk2utf8.dart';
 
 class ParserPattern {
-
   final dynamic pattern;
 
   // the real single one
@@ -32,31 +31,32 @@ class ParserPattern {
 
   ParserPattern(this.pattern) {
     if (pattern is String) {
-        _singlePattern = this;
-        _realPattern = pattern as String;
-        var parts = _realPattern.split("@");
-        if (parts.length < 2) {
-          return;
-        }
-        _realPattern = parts[0];
-        _valfn = parts[1];
+      _singlePattern = this;
+      _realPattern = pattern as String;
+      var parts = _realPattern.split("@");
+      if (parts.length < 2) {
         return;
+      }
+      _realPattern = parts[0];
+      _valfn = parts[1];
+      return;
     }
 
     if (pattern is List) {
-        _arrayPatterns = (pattern as List).map((e) => ParserPattern(e)).toList();
-        return;
+      _arrayPatterns = (pattern as List).map((e) => ParserPattern(e)).toList();
+      return;
     }
 
     if (pattern is Map) {
-      _mapPatterns = (pattern as Map).map((k, v) => MapEntry(k, ParserPattern(v)));
+      _mapPatterns =
+          (pattern as Map).map((k, v) => MapEntry(k, ParserPattern(v)));
       return;
     }
-    
+
     print("Error: Pattern type is ${pattern.runtimeType}");
   }
 
-  dynamic _genVal(HtmlElement ele) {
+  dynamic _genVal(html.HtmlElement ele) {
     if (ele == null) return;
     switch (_valfn) {
       case "text":
@@ -72,7 +72,7 @@ class ParserPattern {
     }
   }
 
-  dynamic parse(HtmlElement ele) {
+  dynamic parse(html.HtmlElement ele) {
     // try each one to parse
     if (_singlePattern != null) {
       var e = ele.querySelector(_realPattern);
@@ -90,10 +90,9 @@ class ParserPattern {
 
     return null;
   }
-
 }
-class Parser {
 
+class Parser {
   // type: jsonpath, xpath, css
 
   // map array
@@ -105,7 +104,7 @@ class Parser {
 
   bool get _isRegex => pattern is String && isRegex;
 
-  Parser(this.pattern, { this.isRegex: false }) {
+  Parser(this.pattern, {this.isRegex: false}) {
     if (_isRegex) {
       _regexp = RegExp(this.pattern);
     } else {
@@ -114,12 +113,11 @@ class Parser {
   }
 
   dynamic parse(String content) {
-    // TODO: 
+    // TODO:
     if (_isRegex) return _regexp.firstMatch(content).group(1);
     return _parserPattern.parse(parseHtmlDocument(content).documentElement);
   }
 }
-
 
 class HttpClient extends http.BaseClient {
   http.Client _httpcli;
@@ -129,21 +127,26 @@ class HttpClient extends http.BaseClient {
   }
 
   Future<http.StreamedResponse> send(http.BaseRequest request) async {
-    request.headers['cookie'] = await CookieManager.instance().getCookies(url: request.url.toString()).then((ck) {
+    request.headers['cookie'] = await CookieManager.instance()
+        .getCookies(url: request.url.toString())
+        .then((ck) {
       return ck.map((e) => "${e.name}=${e.value}").join(";");
     });
-    if (request.headers['user-agent']!=null) request.headers['user-agent'] = UA_PC;
+    if (request.headers['user-agent'] != null)
+      request.headers['user-agent'] = UA_PC;
     return _httpcli.send(request);
   }
 
-  Future<http.Response> request(String method, String url, {
+  Future<http.Response> request(
+    String method,
+    String url, {
     bool useMobile = false,
     Map<String, String> headers,
     body,
     Encoding encoding,
   }) {
     if (headers == null) headers = {};
-    if (headers['user-agent']==null) {
+    if (headers['user-agent'] == null) {
       headers['user-agent'] = useMobile ? UA_IOS : UA_PC;
     }
 
@@ -162,7 +165,6 @@ class HttpClient extends http.BaseClient {
 }
 
 class TaobaoPage extends StatefulWidget {
-
   final int maxTab;
 
   final Widget child;
@@ -183,8 +185,9 @@ class TaobaoPage extends StatefulWidget {
 }
 
 class _TaobaoPageState extends State<TaobaoPage>
-  with TickerProviderStateMixin<TaobaoPage>, AutomaticKeepAliveClientMixin<TaobaoPage> {
-
+    with
+        TickerProviderStateMixin<TaobaoPage>,
+        AutomaticKeepAliveClientMixin<TaobaoPage> {
   @override
   bool get wantKeepAlive => true;
 
@@ -229,9 +232,15 @@ class _TaobaoPageState extends State<TaobaoPage>
     List<WebviewPage> _tmp = [];
     int _idx = 0; // TODO: more customize, now always be the first one.
     _pages.forEach((p) {
-      p.options.visible?tabs.add([p]):tabs.isEmpty?_tmp.add(p):tabs[_idx].add(p);
+      p.options.visible
+          ? tabs.add([p])
+          : tabs.isEmpty
+              ? _tmp.add(p)
+              : tabs[_idx].add(p);
     });
-    (tabs.isEmpty||tabs[_idx].isEmpty)?tabs.add(_tmp):tabs[_idx].addAll(_tmp);
+    (tabs.isEmpty || tabs[_idx].isEmpty)
+        ? tabs.add(_tmp)
+        : tabs[_idx].addAll(_tmp);
 
     // set group id and stack id
     tabs.asMap().forEach((_grpid, element) {
@@ -244,7 +253,8 @@ class _TaobaoPageState extends State<TaobaoPage>
     // update the _tab controller
     // _tabController?.dispose();
     if (_tabController == null || tabs.length != _tabController.length) {
-      _tabController = TabController(initialIndex: tabs.length-1, length: tabs.length, vsync: this);
+      _tabController = TabController(
+          initialIndex: tabs.length - 1, length: tabs.length, vsync: this);
       _controller.emit(EventTabControllerUpdate(_tabController));
     }
 
@@ -257,7 +267,7 @@ class _TaobaoPageState extends State<TaobaoPage>
     // rebuild pages, TODO: remove not nece
     _pageGroups = _buildPageGroups(context);
     return IndexedStack(
-      index: _showWebview?1:0,
+      index: _showWebview ? 1 : 0,
       children: <Widget>[
         widget.child,
         TaobaoPageView(
@@ -311,7 +321,6 @@ class _TaobaoPageState extends State<TaobaoPage>
 }
 
 class TaobaoPageController {
-
   _TaobaoPageState _state;
 
   EventBus _eventBus;
@@ -325,7 +334,6 @@ class TaobaoPageController {
   TaobaoPageController._(
     this._state,
   ) {
-
     _eventBus = EventBus();
     _httpcli = HttpClient();
 
@@ -342,7 +350,8 @@ class TaobaoPageController {
 
   TabController get tabController => _state._tabController;
 
-  WebviewPage get currentViewPage => _state._pageGroups[_state._tabIndex][_state._stackIndex];
+  WebviewPage get currentViewPage =>
+      _state._pageGroups[_state._tabIndex][_state._stackIndex];
 
   // debug
   bool get isDebug => _state._debug;
@@ -370,47 +379,68 @@ class TaobaoPageController {
   }
 
   Future<dynamic> doAction(
-    ActionJob action,
-    {
-      CreatedCallback onCreated,
-      LoadStartCallback onLoadStart,
-      LoadStopCallback onLoadStop,
-      LoadErrorCallback onLoadError,
-      PageOptions options,
-    }
-  ) async {
-
-    if (options==null) options = PageOptions();
+    BuildContext context,
+    ActionJob action, {
+    CreatedCallback onCreated,
+    LoadStartCallback onLoadStart,
+    LoadStopCallback onLoadStop,
+    LoadErrorCallback onLoadError,
+    PageOptions options,
+  }) async {
+    if (options == null) options = PageOptions();
 
     // 如果是headless模式，就使用client直接发送请求
     // 但是很明显，action是不一样的
     if (action.headless) {
-      return _httpcli.request(
+      return _httpcli
+          .request(
         options.method,
         action.url,
         body: action.body,
         useMobile: options.useMobile,
         headers: options.headers,
-      ).then((v) {
+      )
+          .then((v) async {
         // 编码处理
         var content = v.body;
-        if (options.gbk || v.headers["content-type"].toLowerCase().contains("gbk")) {
+
+        // 先判断是否出现了验证码
+        // 订单的暂时不处理
+        if (PCWeb.isVerify(content)) {
+          print("出现了验证码 ======> 需要弹出来划过去");
+          // 出现验证码的化，就直接弹出来页面进行验证，但是这里没有context好像不行
+
+          await openVerifyPage(context, action.url);
+
+          print("=====> 已经划过了验证码");
+
+          // 等待验证码划过
+          return doAction(context, action, options: options);
+        }
+
+        if (options.gbk ||
+            v.headers["content-type"].toLowerCase().contains("gbk")) {
           content = gbk.decode(v.bodyBytes);
         }
 
         if (action.json) {
           return json.decode(content);
         } else {
-          return options.pattern == null ? content : Parser(options.pattern, isRegex: options.isRegex).parse(content);
+          return options.pattern == null
+              ? content
+              : Parser(options.pattern, isRegex: options.isRegex)
+                  .parse(content);
         }
       });
     }
-    
+
     // check if we are already login
-    if (!_state._isLogon && !action.noLogin) return Future.error("not account login");
+    if (!_state._isLogon && !action.noLogin)
+      return Future.error("not account login");
 
     // find match
-    WebviewPage curp = _state._pages.firstWhere((p) => p.match(action.url), orElse: () => null);
+    WebviewPage curp = _state._pages
+        .firstWhere((p) => p.match(action.url), orElse: () => null);
     // if we found matched page, just do action
     // TODO: check pages overload, try another page
     if (curp != null) return curp.doAction(action);
@@ -429,34 +459,77 @@ class TaobaoPageController {
     });
   }
 
-  Future<WebviewPage> openPage(
-    String url,
-    {
-      CreatedCallback onCreated,
-      LoadStartCallback onLoadStart,
-      LoadStopCallback onLoadStop,
-      LoadErrorCallback onLoadError,
-      PageOptions options,
-    }
-  ) {
+  // 直接就叫做滑动验证码好了
+  Future<dynamic> openVerifyPage(BuildContext context, String url) {
+    // InAppWebViewController  cc;
 
+    // 当页面出现自动刷新时，就说明已经通过了验证
+    bool _autoReload = false;
+
+    return Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (context) => Scaffold(
+                  appBar: AppBar(
+                    title: Text("淘宝验证码"),
+                  ),
+                  body: TaobaoWebview(
+                    initialUrl: url,
+                    useMobile: true,
+                    // onWebViewCreated: (c) => cc = c,
+                    onLoadStart: (c, url) {
+
+                      print("验证码 webview 开始加载 $url");
+
+                      // 怎么判断是否已经恢复了而没有验证码
+                      // if (url.endsWith("https//www.taobao.com")) {
+                      //   // 对于订单类型的就是滑动成功了
+                      //   return Navigator.pop(context);
+                      // }
+                      // 其他的呢
+                      
+                      if (!_autoReload) {
+                        _autoReload = true;
+                        return;
+                      }
+
+                      // 第二次就是自动加载了
+                      // 应该就是验证成功 TODO:
+                      return Navigator.pop(context);
+                    },
+                    onLoadStop: (c, url) {
+                      print("验证码 webview 加载结束! $url");
+                    },
+                  ),
+                )));
+  }
+
+  Future<WebviewPage> openPage(
+    String url, {
+    CreatedCallback onCreated,
+    LoadStartCallback onLoadStart,
+    LoadStopCallback onLoadStop,
+    LoadErrorCallback onLoadError,
+    PageOptions options,
+  }) {
     // NOTE: fix bug in getter null
-    if (options==null) options = PageOptions();
+    if (options == null) options = PageOptions();
 
     // if (H5PageUrls.isLogin(url)) return Future.error("don't allow open login page");
 
     // TODO: reuse page with empty job queue, except which has keepalive
 
-    if (_state._pages.length>_state.widget.maxTab) {
+    if (_state._pages.length > _state.widget.maxTab) {
       // TODO: make a page can be turn to a new one
       return Future.error("max tab ${_state.widget.maxTab}");
     }
 
-    if (options!=null && options.max > 0) {
+    if (options != null && options.max > 0) {
       List<WebviewPage> ps = _state._pages.where((p) => p.match(url)).toList();
       if (ps.length >= options.max) {
         // TODO: get the random page
-        if (options.refresh) ps[0].webviewController.reload(); // TODO: should replace onHandler?
+        if (options.refresh)
+          ps[0].webviewController.reload(); // TODO: should replace onHandler?
         return Future.value(ps[0]);
       }
     }
@@ -469,7 +542,8 @@ class TaobaoPageController {
     // init the new page
     WebviewPage page;
     page = WebviewPage(
-      _len, url,
+      _len,
+      url,
       onWebViewCreated: (controller) {
         emit(EventPageCreated(page));
         onCreated?.call(controller);
@@ -489,7 +563,7 @@ class TaobaoPageController {
       options: options,
     );
 
-    print("[controller] open the ${_len+1} page");
+    print("[controller] open the ${_len + 1} page");
 
     // TODO: handle load page error, this page need be destroy
 
@@ -508,12 +582,13 @@ class TaobaoPageController {
   // show special page with url
   void showPageWithUrl(String url) {
     WebviewPage page = getPageWithUrl(url);
-    if (page!=null) return showPage(page);
+    if (page != null) return showPage(page);
     print("can't found page with url: $url, maybe you should open it first.");
   }
 
   WebviewPage getPageWithUrl(String url) {
-    return _state._pages.firstWhere((element) => element.match(url), orElse: () => null);
+    return _state._pages
+        .firstWhere((element) => element.match(url), orElse: () => null);
   }
 
   // clean and reset

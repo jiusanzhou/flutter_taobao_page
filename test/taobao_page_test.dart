@@ -1,6 +1,7 @@
 
 import 'dart:io';
 
+import 'package:flutter_taobao_page/taobao/pc.dart';
 import 'package:flutter_taobao_page/taobao_page.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -61,6 +62,12 @@ void main() {
   test('account dispute html', () {
     var content = File('data/buyerDisputeList.htm').readAsStringSync();
     var data = Parser("var disputeData =(.+);", isRegex: true).parse(content);
+    print(data);
+  });
+  
+  test('is verify html', () {
+    var content = File('data/verify.htm').readAsStringSync();
+    var data = PCWeb.isVerify(content);
     print(data);
   });
 }

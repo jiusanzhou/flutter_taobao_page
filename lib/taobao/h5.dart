@@ -1,4 +1,4 @@
-
+import 'package:flutter/material.dart';
 import 'package:flutter_taobao_page/action_page.dart';
 import 'package:flutter_taobao_page/taobao_page.dart';
 
@@ -16,37 +16,54 @@ class H5API {
   // if offered, on stop load, check if is home page, if true, we have load
   // success, we need to close the login page webview imme
 
-  Future<dynamic> userProfile({bool check}) {
-    return controller.doAction(ActionJob(H5PageUrls.home, code: H5APICode.userProfile(), noLogin: check));
+  Future<dynamic> userProfile(BuildContext context, {bool check}) {
+    return controller.doAction(
+        context,
+        ActionJob(H5PageUrls.home,
+            code: H5APICode.userProfile(), noLogin: check));
   }
 
-  Future<dynamic> orderList({int page: 1, String type: "all"}) {
-    return controller.doAction(ActionJob(H5PageUrls.home, code: H5APICode.orderList(page: page, type: type)));
+  Future<dynamic> orderList(BuildContext context,
+      {int page: 1, String type: "all"}) {
+    return controller.doAction(
+        context,
+        ActionJob(H5PageUrls.home,
+            code: H5APICode.orderList(page: page, type: type)));
   }
 
-  Future<dynamic> orderDetail(String orderId) {
-    return controller.doAction(ActionJob(H5PageUrls.home, code: H5APICode.orderDetail(orderId)));
+  Future<dynamic> orderDetail(BuildContext context, String orderId) {
+    return controller.doAction(context,
+        ActionJob(H5PageUrls.home, code: H5APICode.orderDetail(orderId)));
   }
 
-  Future<dynamic> logisDetail(String orderId) {
-    return controller.doAction(ActionJob(H5PageUrls.home, code: H5APICode.logisDetail(orderId)));
+  Future<dynamic> logisDetail(BuildContext context, String orderId) {
+    return controller.doAction(context,
+        ActionJob(H5PageUrls.home, code: H5APICode.logisDetail(orderId)));
   }
 
-  Future<dynamic> vipScore() {
-    return  controller.doAction(ActionJob(H5PageUrls.home, code: H5APICode.vipScore()));
+  Future<dynamic> vipScore(
+    BuildContext context,
+  ) {
+    return controller.doAction(
+        context, ActionJob(H5PageUrls.home, code: H5APICode.vipScore()));
   }
 
-  Future<dynamic> aliStardDimensionDatadisputeList() {
-    return  controller.doAction(ActionJob(H5PageUrls.home, code: H5APICode.aliStardDimensionData()));
+  Future<dynamic> aliStardDimensionDatadisputeList(
+    BuildContext context,
+  ) {
+    return controller.doAction(context,
+        ActionJob(H5PageUrls.home, code: H5APICode.aliStardDimensionData()));
   }
 
-  Future<dynamic> disputeList() {
-    return  controller.doAction(ActionJob(H5PageUrls.home, code: H5APICode.disputeList()));
+  Future<dynamic> disputeList(
+    BuildContext context,
+  ) {
+    return controller.doAction(
+        context, ActionJob(H5PageUrls.home, code: H5APICode.disputeList()));
   }
 }
 
 class H5APICode {
-
   static String userProfile() {
     return _basicRequest("mtop.taobao.mclaren.getuserprofile", "1.0", "{}");
   }
@@ -81,7 +98,9 @@ class H5APICode {
 
   // 退款/售后
   static String disputeList({int page: 1}) {
-    return _basicRequest("mtop.alibaba.refundface2.disputeservice.renderdisputelist.h5", "3.0", """{
+    return _basicRequest(
+        "mtop.alibaba.refundface2.disputeservice.renderdisputelist.h5",
+        "3.0", """{
       "tabId":null,"sellerId":null,"requestFrom":null,
       curPage:$page,
     }""");
@@ -90,8 +109,8 @@ class H5APICode {
   // 物流详情
   static String logisDetail(String orderId) {
     return _basicRequest(
-      "mtop.cnwireless.cnlogisticdetailservice.querylogisdetailbytradeid",
-      "v1.0", """{
+        "mtop.cnwireless.cnlogisticdetailservice.querylogisdetailbytradeid",
+        "v1.0", """{
         orderId: '$orderId',
       }""");
   }
@@ -100,7 +119,7 @@ class H5APICode {
   static String vipScore() {
     return _basicRequest(
       "mtop.vip.gold.user.customize",
-      "1.0", 
+      "1.0",
       """{"source":"vipDayNew"}""",
     );
   }
@@ -109,7 +128,7 @@ class H5APICode {
   static String aliStardDimensionData() {
     return _basicRequest(
       "mtop.taobao.alistar.dimensions.getdata",
-      "1.0", 
+      "1.0",
       """{"ids":"{\\"dimensions\\":[3,0,1,2]}","from":"TB"}""",
     );
   }
@@ -123,7 +142,8 @@ class H5APICode {
 
 class H5PageUrls {
   static String login = "https://login.m.taobao.com/login.htm";
-  static String home = "https://h5.m.taobao.com/mlapp/mytaobao.html"; // redirect from login
+  static String home =
+      "https://h5.m.taobao.com/mlapp/mytaobao.html"; // redirect from login
   static String mhome = "https://main.m.taobao.com/mytaobao/index.html";
   static String olist = "https://main.m.taobao.com/olist/index.html";
 

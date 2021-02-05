@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_taobao_page/action_page.dart';
 import 'package:flutter_taobao_page/taobao_page.dart';
@@ -9,21 +10,30 @@ class PCWeb {
 
   PCWeb(this.controller);
 
-  static ActionJob userBaseInfoAction = ActionJob(PCPageUrls.userBaseInfo, code: PCCode.userBaseInfo(), isAsync: false);
-  static ActionJob accountProfileAction = ActionJob(PCPageUrls.accountProfile, code: PCCode.accountProfile(), isAsync: false);
-  static ActionJob accountSecurityAction = ActionJob(PCPageUrls.accountSecurity, code: PCCode.accountSecurity(), isAsync: false);
-  static ActionJob rateScoreAction = ActionJob(PCPageUrls.rateScore, code: PCCode.rateScore(), isAsync: false);
-  static ActionJob certityInfoAction = ActionJob(PCPageUrls.certityInfo, code: PCCode.certityInfo(), isAsync: false);
-  static ActionJob vipScoreAction = ActionJob(PCPageUrls.vipScore, code: PCCode.vipScore(), isAsync: false);
-  static ActionJob aliStarAction = ActionJob(PCPageUrls.aliStar, code: PCCode.aliStar(), isAsync: false);
-  static ActionJob disputeAction = ActionJob(PCPageUrls.dispute, code: PCCode.dispute(), isAsync: false);
+  static ActionJob userBaseInfoAction = ActionJob(PCPageUrls.userBaseInfo,
+      code: PCCode.userBaseInfo(), isAsync: false);
+  static ActionJob accountProfileAction = ActionJob(PCPageUrls.accountProfile,
+      code: PCCode.accountProfile(), isAsync: false);
+  static ActionJob accountSecurityAction = ActionJob(PCPageUrls.accountSecurity,
+      code: PCCode.accountSecurity(), isAsync: false);
+  static ActionJob rateScoreAction =
+      ActionJob(PCPageUrls.rateScore, code: PCCode.rateScore(), isAsync: false);
+  static ActionJob certityInfoAction = ActionJob(PCPageUrls.certityInfo,
+      code: PCCode.certityInfo(), isAsync: false);
+  static ActionJob vipScoreAction =
+      ActionJob(PCPageUrls.vipScore, code: PCCode.vipScore(), isAsync: false);
+  static ActionJob aliStarAction =
+      ActionJob(PCPageUrls.aliStar, code: PCCode.aliStar(), isAsync: false);
+  static ActionJob disputeAction =
+      ActionJob(PCPageUrls.dispute, code: PCCode.dispute(), isAsync: false);
 
-  Future<dynamic> userBaseInfo() {
-    return controller.doAction(userBaseInfoAction);
+  Future<dynamic> userBaseInfo(BuildContext context) {
+    return controller.doAction(context, userBaseInfoAction);
   }
 
-  Future<dynamic> accountProfile2() {
+  Future<dynamic> accountProfile2(BuildContext context) {
     return controller.doAction(
+      context,
       ActionJob(
         PCPageUrls.accountProfile,
         headless: true,
@@ -32,7 +42,8 @@ class PCWeb {
         pattern: {
           "realname": "#ah\\:addressForm > li:nth-child(1) > strong@text",
           "email": "#ah\\:addressForm > li:nth-child(2) > strong@text",
-          "gender": "#ah\\:addressForm > li:nth-child(3) > input[type='hidden']@value",
+          "gender":
+              "#ah\\:addressForm > li:nth-child(3) > input[type='hidden']@value",
           "birth": [
             "#ah\\:addressForm > li:nth-child(4) > input:nth-child(2)@value",
             "#ah\\:addressForm > li:nth-child(4) > input:nth-child(3)@value",
@@ -43,12 +54,15 @@ class PCWeb {
     );
   }
 
-  Future<dynamic> accountProfile() {
-    return controller.doAction(accountProfileAction);
+  Future<dynamic> accountProfile(BuildContext context) {
+    return controller.doAction(context, accountProfileAction);
   }
 
-  Future<dynamic> accountSecurity2() {
+  Future<dynamic> accountSecurity2(
+    BuildContext context,
+  ) {
     return controller.doAction(
+      context,
       ActionJob(
         PCPageUrls.accountSecurity,
         headless: true,
@@ -63,12 +77,13 @@ class PCWeb {
     );
   }
 
-  Future<dynamic> accountSecurity() {
-    return controller.doAction(accountSecurityAction);
+  Future<dynamic> accountSecurity(BuildContext context) {
+    return controller.doAction(context, accountSecurityAction);
   }
 
-  Future<dynamic> certityInfo2() {
+  Future<dynamic> certityInfo2(BuildContext context) {
     return controller.doAction(
+      context,
       ActionJob(
         PCPageUrls.certityInfo,
         headless: true,
@@ -86,26 +101,34 @@ class PCWeb {
     );
   }
 
-  Future<dynamic> certityInfo() {
-    return controller.doAction(certityInfoAction);
+  Future<dynamic> certityInfo(BuildContext context) {
+    return controller.doAction(context, certityInfoAction);
   }
 
-  Future<dynamic> vipScore() {
-    return controller.doAction(vipScoreAction, options: PageOptions(timeout: const Duration(seconds: 10)));
+  Future<dynamic> vipScore(
+    BuildContext context,
+  ) {
+    return controller.doAction(context, vipScoreAction,
+        options: PageOptions(timeout: const Duration(seconds: 10)));
   }
 
-  Future<dynamic> vipScoreApi() {
+  Future<dynamic> vipScoreApi(
+    BuildContext context,
+  ) {
     return controller.doAction(
-      ActionJob(
-        "https://vip.taobao.com/ajax/getGoldUser.do?_input_charset=utf-8&from=diaoding",
-        headless: true,
-        json: true,
-      )
-    );
+        context,
+        ActionJob(
+          "https://vip.taobao.com/ajax/getGoldUser.do?_input_charset=utf-8&from=diaoding",
+          headless: true,
+          json: true,
+        ));
   }
 
-  Future<dynamic> rateScore2() {
+  Future<dynamic> rateScore2(
+    BuildContext context,
+  ) {
     return controller.doAction(
+      context,
       ActionJob(
         PCPageUrls.rateScore,
         headless: true,
@@ -129,18 +152,26 @@ class PCWeb {
     );
   }
 
-  Future<dynamic> rateScore() {
-    return controller.doAction(rateScoreAction);
+  Future<dynamic> rateScore(
+    BuildContext context,
+  ) {
+    return controller.doAction(context, rateScoreAction);
   }
 
-  Future<dynamic> aliStar() {
-    return controller.doAction(aliStarAction);
+  Future<dynamic> aliStar(
+    BuildContext context,
+  ) {
+    return controller.doAction(context, aliStarAction);
   }
 
   //"var disputeData = (.+}}) ;", isRegex: true
 
-  Future<dynamic> dispute2() {
-    return  controller.doAction(
+  Future<dynamic> dispute2(
+    BuildContext context,
+  ) {
+    return controller
+        .doAction(
+      context,
       ActionJob(
         PCPageUrls.dispute,
         headless: true,
@@ -149,19 +180,28 @@ class PCWeb {
         pattern: "var disputeData =(.+);",
         isRegex: true,
       ),
-    ).then((v) {
+    )
+        .then((v) {
       return json.decode(v);
     });
   }
 
-  Future<dynamic> dispute() {
-    return controller.doAction(disputeAction);
+  Future<dynamic> dispute(
+    BuildContext context,
+  ) {
+    return controller.doAction(context, disputeAction);
   }
 
-  // 
+  //
 
-  Future<dynamic> orderBotApi(int page, {int count = 20, String type = "", bool isAsync = false, Function() onVerifyConfirm}) {
+  Future<dynamic> orderBotApi(BuildContext context,
+      {int page = 1,
+      int count = 20,
+      String type = "",
+      bool isAsync = false,
+      Function() onVerifyConfirm}) {
     return controller.doAction(
+      context,
       ActionJob(
         "https://ai.alimebot.taobao.com/order/parentList",
         body: "pageNum=$page&pageSize=$count",
@@ -171,8 +211,15 @@ class PCWeb {
     );
   }
 
-  Future<dynamic> orderApi(int page, {int count = 20, String type = "", bool isAsync = false, Function() onVerifyConfirm}) {
-    return controller.doAction(
+  Future<dynamic> orderApi(BuildContext context,
+      {int page = 1,
+      int count = 20,
+      String type = "",
+      bool isAsync = false,
+      Function() onVerifyConfirm}) {
+    return controller
+        .doAction(
+      context,
       ActionJob(
         "https://buyertrade.taobao.com/trade/itemlist/asyncBought.htm?action=itemlist/BoughtQueryAction&event_submit_do_query=1&_input_charset=utf8&tabCode=",
         body: "pageNum=$page&pageSize=$count",
@@ -183,11 +230,15 @@ class PCWeb {
         method: "POST",
         headers: {
           "content-type": "application/x-www-form-urlencoded; charset=UTF-8",
-          "referer": "https://buyertrade.taobao.com/trade/itemlist/list_bought_items.htm",
+          "referer":
+              "https://buyertrade.taobao.com/trade/itemlist/list_bought_items.htm",
         },
       ),
-    ).then((value) {
-      if (value["rgv587_flag"]=="sm" && value["url"]!="" && value["url"].indexOf("_____tmd_____") > 0) {
+    )
+        .then((value) {
+      if (value["rgv587_flag"] == "sm" &&
+          value["url"] != "" &&
+          value["url"].indexOf("_____tmd_____") > 0) {
         // 有验证码
         return Future.error(value["url"]);
       }
@@ -196,10 +247,17 @@ class PCWeb {
   }
 
   // we need to check if we has verify code
-  Future<dynamic> order(int page, {int count = 20, String type = "", bool isAsync = false, Function() onVerifyConfirm}) {
+  Future<dynamic> order(BuildContext context,
+      {int page = 1,
+      int count = 20,
+      String type = "",
+      bool isAsync = false,
+      Function() onVerifyConfirm}) {
     InAppWebViewController _wc;
     return controller.doAction(
-      ActionJob(PCPageUrls.order, code: PCCode.order(page, count: count, type: type), isAsync: isAsync),
+      context,
+      ActionJob(PCPageUrls.order,
+          code: PCCode.order(page, count: count, type: type), isAsync: isAsync),
       onLoadStop: (controller, url) {
         _wc = controller;
         // check verify code
@@ -218,10 +276,12 @@ class PCWeb {
     ).then((value) {
       // check verify code
       print(" 订单数据 =======> $value");
-      if (value["rgv587_flag"]=="sm" && value["url"]!="" && value["url"].indexOf("_____tmd_____") > 0) {
+      if (value["rgv587_flag"] == "sm" &&
+          value["url"] != "" &&
+          value["url"].indexOf("_____tmd_____") > 0) {
         // we nee to show web, how to pass the page instance out
         // TODO: sometime we don't display verify page on webview, but get error data in api.
-        
+
         // 返回验证码链接
         // _wc.loadUrl(url: value["url"]);
         return Future.error(value["url"]);
@@ -229,10 +289,15 @@ class PCWeb {
       return value;
     });
   }
+
+  static final _verifyPattern = RegExp("/_____tmd_____/verify/");
+
+  static bool isVerify(String content) {
+    return _verifyPattern.hasMatch(content);
+  }
 }
 
 class PCCode {
-
   // TODO: improve use scripts auto load to page
 
   static String userBaseInfo() {
@@ -364,12 +429,17 @@ window.scroll(0, 0); // scroll to left 0 top 0
 
 class PCPageUrls {
   static String userBaseInfo = "https://i.taobao.com/user/baseInfoSet.htm";
-  static String accountProfile = "https://member1.taobao.com/member/fresh/account_profile.htm";
-  static String accountSecurity = "https://member1.taobao.com/member/fresh/account_security.htm";
-  static String certityInfo = "https://member1.taobao.com/member/fresh/certify_info.htm";
+  static String accountProfile =
+      "https://member1.taobao.com/member/fresh/account_profile.htm";
+  static String accountSecurity =
+      "https://member1.taobao.com/member/fresh/account_security.htm";
+  static String certityInfo =
+      "https://member1.taobao.com/member/fresh/certify_info.htm";
   static String vipScore = "https://vip.taobao.com/ajax";
   static String rateScore = "https://rate.taobao.com/myRate.htm";
   static String aliStar = "https://h5.m.taobao.com/alistar/intro-pc.html";
-  static String dispute = "https://refund2.taobao.com/dispute/buyerDisputeList.htm";
-  static String order = "https://buyertrade.taobao.com/trade/itemlist/list_bought_items.htm";
+  static String dispute =
+      "https://refund2.taobao.com/dispute/buyerDisputeList.htm";
+  static String order =
+      "https://buyertrade.taobao.com/trade/itemlist/list_bought_items.htm";
 }
