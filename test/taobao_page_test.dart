@@ -55,7 +55,7 @@ void main() {
         // 是买家的情况
         "#new-rate-content > div.personal-info > div.personal-rating > table:nth-child(4) > tbody > tr:nth-child(1) > td",
         "#new-rate-content > div.personal-info > div.personal-rating > table:nth-child(4) > tbody > tr:nth-child(1) > td > img@src",
-        "#new-rate-content > div.personal-info > div.personal-rating > table:nth-child(4) > tbody > tr:nth-child(1) > td",
+        "#new-rate-content > div.personal-info > div.personal-rating > table:nth-child(4) > tbody > tr:nth-child(2) > td",
       ]
     }).parse(content);
     print(data);
