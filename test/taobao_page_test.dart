@@ -25,6 +25,7 @@ void main() {
     var data = Parser([
       "#main-content > dl > dd:nth-child(2) > ul > li:nth-child(1) > span:nth-child(2)@text",
       "#main-content > dl > dd:nth-child(2) > ul > li:nth-child(2) > span:nth-child(2)@text",
+      "#main-content > dl > dd:nth-child(2) > ul > li:nth-child(3) > span:nth-child(2)@text",
       "#main-content > dl > dd:nth-child(2) > ul > li:nth-child(4) > span:nth-child(2)@text",
     ]).parse(content);
     print(data);
