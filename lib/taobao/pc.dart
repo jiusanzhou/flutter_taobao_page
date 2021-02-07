@@ -31,6 +31,20 @@ class PCWeb {
     return controller.doAction(context, userBaseInfoAction);
   }
 
+  Future<dynamic> isSeller(BuildContext context) {
+    return controller.doAction(
+      context,
+      ActionJob(
+        PCPageUrls.sellerAjax + "?" + "callback=seller_layout_head&action=FrameworkLayoutAction&event_submit_do_layout_data=true",
+        headless: true,
+      ),
+      options: PageOptions(
+        pattern: "(\{.+\})",
+        isRegex: true,
+      )
+    ).then((v) => json.decode(v));
+  }
+
   Future<dynamic> accountProfile2(BuildContext context) {
     return controller.doAction(
       context,
@@ -443,4 +457,5 @@ class PCPageUrls {
       "https://refund2.taobao.com/dispute/buyerDisputeList.htm";
   static String order =
       "https://buyertrade.taobao.com/trade/itemlist/list_bought_items.htm";
+  static String sellerAjax = "https://myseller.taobao.com/ajaxProxy.do";
 }

@@ -71,4 +71,10 @@ void main() {
     var data = PCWeb.isVerify(content);
     print(data);
   });
+
+  test('is seller json', () {
+    var content = 'seller_layout_head({"status":1,"data":{"sellerType":3}})';
+    var data = Parser("(\{.+\})", isRegex: true).parse(content);
+    print(data);
+  });
 }
