@@ -61,6 +61,15 @@ class H5API {
     return controller.doAction(
         context, ActionJob(H5PageUrls.home, code: H5APICode.disputeList()));
   }
+
+
+  Future<dynamic> punishList(
+    BuildContext context,
+  ) {
+    return controller.doAction(context,
+        ActionJob(H5PageUrls.home, code: H5APICode.punishList()));
+  }
+
 }
 
 class H5APICode {
@@ -130,6 +139,18 @@ class H5APICode {
       "mtop.taobao.alistar.dimensions.getdata",
       "1.0",
       """{"ids":"{\\"dimensions\\":[3,0,1,2]}","from":"TB"}""",
+    );
+  }
+
+  // 处罚记录
+  // 来自: https://h5.m.taobao.com/app/baqcenter/index.html#/violationList
+  // 还可以获取登录记录（设备）、停用帐号等
+  // 对于恶意帐号的自杀有用处!!!
+  static String punishList() {
+    return _basicRequest(
+      "mtop.taobao.aq.punish.list.get",
+      "1.0",
+      """{"limit":30,"statusList":null,"punishConfigSources":"[\\"aq\\"]","source":"0"}""",
     );
   }
 
