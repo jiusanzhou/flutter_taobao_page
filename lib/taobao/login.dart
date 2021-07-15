@@ -77,7 +77,7 @@ class H5PasswordTaobaoLoginPage extends TaobaoLoginPage {
 
     if (isRecent) {
       print("是最近的帐号登录，可以先检查是否cookie有效");
-      bool expired = await _cli.get(URLCheckSession).then((res) {
+      bool expired = await _cli.get(Uri.parse(URLCheckSession)).then((res) {
         print("====> ${res.body}");
         return res.body.contains("FAIL_SYS_SESSION_EXPIRED");
       });

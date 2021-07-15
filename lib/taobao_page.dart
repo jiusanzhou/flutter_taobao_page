@@ -153,11 +153,11 @@ class HttpClient extends http.BaseClient {
     switch (method) {
       case "get":
       case "GET":
-        return this.get(url, headers: headers);
+        return this.get(Uri.parse(url), headers: headers);
         break;
       case 'post':
       case 'POST':
-        return this.post(url, headers: headers, body: body, encoding: encoding);
+        return this.post(Uri.parse(url), headers: headers, body: body, encoding: encoding);
       default:
         return this.noSuchMethod(null);
     }
