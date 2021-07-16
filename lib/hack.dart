@@ -18,7 +18,7 @@ class _HackKeepAliveState extends State<HackKeepAlive> with AutomaticKeepAliveCl
       width: 5,
       height: 5,
       child: InAppWebView(
-        initialUrl: H5PageUrls.home,
+        initialUrlRequest: URLRequest(url: Uri.parse(H5PageUrls.home)),
         initialOptions: InAppWebViewGroupOptions(crossPlatform: InAppWebViewOptions(javaScriptEnabled: true)),
       ),
     );

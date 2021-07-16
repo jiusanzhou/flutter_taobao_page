@@ -280,7 +280,7 @@ class PCWeb {
         if (url.indexOf("_____tmd_____/verify") > 0) {
           print("[page taobao order] verify code, need to reload");
           // just reload
-          controller.loadUrl(url: PCPageUrls.order);
+          controller.loadUrl(urlRequest: URLRequest(url: Uri.parse(PCPageUrls.order)));
 
           // call verify back
           onVerifyConfirm?.call();

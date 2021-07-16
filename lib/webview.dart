@@ -65,19 +65,19 @@ class _TaobaoWebviewState extends State<TaobaoWebview> with AutomaticKeepAliveCl
     if (widget.onWebViewCreated!=null) widget.onWebViewCreated(controller);
   }
 
-  void _onLoadStart(InAppWebViewController controller, String url) {
+  void _onLoadStart(InAppWebViewController controller, Uri url) {
     tmpurl = url;
 
-    if (widget.onLoadStart!=null) widget.onLoadStart(controller, url);
+    if (widget.onLoadStart!=null) widget.onLoadStart(controller, url.toString());
   }
 
-  void _onLoadStop(InAppWebViewController controller, String url) {
+  void _onLoadStop(InAppWebViewController controller, Uri url) {
 
     // 
-    if (widget.onLoadStop!=null) widget.onLoadStop(controller, url);
+    if (widget.onLoadStop!=null) widget.onLoadStop(controller, url.toString());
   }
 
-  String tmpurl;
+  Uri tmpurl;
   int tmpval;
   void _onProcessChanged(InAppWebViewController controller, int v) {
     if (widget.onProgressChanged!=null) widget.onProgressChanged(controller, v);
@@ -94,20 +94,19 @@ class _TaobaoWebviewState extends State<TaobaoWebview> with AutomaticKeepAliveCl
     tmpval = v;
   }
 
-  void _onLoadError(InAppWebViewController controller, String url, int code, String message) {
+  void _onLoadError(InAppWebViewController controller, Uri url, int code, String message) {
 
     // 
-    if (widget.onLoadError!=null) widget.onLoadError(controller, url, code, message);
+    if (widget.onLoadError!=null) widget.onLoadError(controller, url.toString(), code, message);
   }
 
   @override
   Widget build(BuildContext context) {
     return InAppWebView(
-      initialUrl: widget.initialUrl,
+      initialUrlRequest: URLRequest(url: Uri.parse(widget.initialUrl)),
       initialOptions: InAppWebViewGroupOptions(
         crossPlatform: InAppWebViewOptions(
           javaScriptEnabled: true,
-          debuggingEnabled: false,
           contentBlockers: widget.blockers,
           preferredContentMode: widget.useMobile ? UserPreferredContentMode.MOBILE:UserPreferredContentMode.DESKTOP,
           // userAgent: widget.useMobile ? UA_IOS : UA_PC// we need to set correct ua for page to load

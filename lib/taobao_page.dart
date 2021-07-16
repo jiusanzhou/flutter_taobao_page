@@ -128,7 +128,7 @@ class HttpClient extends http.BaseClient {
 
   Future<http.StreamedResponse> send(http.BaseRequest request) async {
     request.headers['cookie'] = await CookieManager.instance()
-        .getCookies(url: request.url.toString())
+        .getCookies(url: request.url)
         .then((ck) {
       return ck.map((e) => "${e.name}=${e.value}").join(";");
     });

@@ -37,7 +37,7 @@ class HttpClient extends http.BaseClient {
 
   Future<http.StreamedResponse> send(http.BaseRequest request) async {
     request.headers['user-agent'] = UA_IOS;
-    request.headers['cookie'] = await CookieManager.instance().getCookies(url: URLCheckSession).then((ck) {
+    request.headers['cookie'] = await CookieManager.instance().getCookies(url: Uri.parse(URLCheckSession)).then((ck) {
       return ck.map((e) => "${e.name}=${e.value}").join(";");
     });
     print("====> cookie: ${request.headers['cookie']}");
