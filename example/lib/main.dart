@@ -59,7 +59,10 @@ class _MyHomePageState extends State<MyHomePage> {
 
   bool _busy = false;
 
-  List<List<String>> _orderTypes = [["", "全部"], ["waitConfirm", "待收货"]];
+  List<List<String>> _orderTypes = [
+    ["", "全部"],
+    ["waitConfirm", "待收货"]
+  ];
 
   Map<String, List<dynamic>> _allOrders = {};
   Map<String, int> _currentPages = {};
@@ -70,7 +73,7 @@ class _MyHomePageState extends State<MyHomePage> {
   void _fetchOrder(int index) {
     if (_busy) return;
     String type = _orderTypes[index][0];
-    if (_hasMores[type]!=null&&!_hasMores[type]) {
+    if (_hasMores[type] != null && !_hasMores[type]) {
       print("$index - $type 没有更多内容~");
       return;
     }
@@ -79,11 +82,13 @@ class _MyHomePageState extends State<MyHomePage> {
       _busy = true;
     });
     int _page = _currentPages[type] ?? 0;
-    _controller.pcweb.order(context, page: _page + 1, count: 5, type: type).then((data) {
+    _controller.pcweb
+        .order(context, page: _page + 1, count: 5, type: type)
+        .then((data) {
       if (_allOrders[type] == null) _allOrders[type] = [];
-    
+
       setState(() {
-        _hasMores[type] = data["mainOrders"].length>=5;
+        _hasMores[type] = data["mainOrders"].length >= 5;
       });
 
       _allOrders[type].addAll(data["mainOrders"]);
@@ -93,7 +98,7 @@ class _MyHomePageState extends State<MyHomePage> {
       });
     }).catchError((_) {
       print("抓取第 $_page 页订单失败: $_");
-    }).whenComplete((){
+    }).whenComplete(() {
       setState(() {
         _busy = false;
       });
@@ -114,85 +119,86 @@ class _MyHomePageState extends State<MyHomePage> {
     // fast, so that you can just rebuild anything that needs updating rather
     // than having to individually change instances of widgets.
     return DefaultTabController(
-      length: _orderTypes.length,
-      initialIndex: 0,
-      child: Builder(
-        builder: (context) {
-          return Scaffold(
-            appBar: AppBar(
-              // Here we take the value from the MyHomePage object that was created by
-              // the App.build method, and use it to set our appbar title.
-              title: GestureDetector(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                    Text("${widget.title} v0.3.0"),
-                    HackKeepAlive(),
-                  ],
-                ),
-                onDoubleTap: () {
-                  _controller.setDebug(!_controller.isDebug);
-                },
-              ),
-              bottom: _canFetch ? AppBar(
-                title: TabBar(
-                  tabs: List.generate(_orderTypes.length, (index) => Tab(text: _orderTypes[index][1]))
-                )
-              ) : null,
-              actions: <Widget>[
-                IconButton(
-                  onPressed: () {
-                    _controller.pages[0].webviewController.reload();
-                    setState(() {
-                      _currentPages = {};
-                      _loading = true;
-                      _canFetch = false;
-                      _allOrders = {};
-                    });
+        length: _orderTypes.length,
+        initialIndex: 0,
+        child: Builder(
+          builder: (context) {
+            return Scaffold(
+              appBar: AppBar(
+                // Here we take the value from the MyHomePage object that was created by
+                // the App.build method, and use it to set our appbar title.
+                title: GestureDetector(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      Text("${widget.title} v0.3.0"),
+                      HackKeepAlive(),
+                    ],
+                  ),
+                  onDoubleTap: () {
+                    _controller.setDebug(!_controller.isDebug);
                   },
-                  icon: Icon(Icons.refresh),
                 ),
-              ],
-            ),
-            body: TaobaoPage(
-              /// 抓取模块创建: 这里拿到controller
-              onCreated: (TaobaoPageController controller) {
-                _controller = controller;
-
-                _controller.on<EventPageLoadStop>().listen((event) {
-                  // 是否是登录页面
-                  if (H5PageUrls.isLogin(event.url)) {
-                    setState(() {
-                      _loading = false;
-                    });
-                  }
-                });
-              },
-
-              child: NotificationListener(
-                onNotification: (ScrollNotification note) {
-                  if (note.metrics.pixels == note.metrics.maxScrollExtent) {
-                    _fetchOrder(DefaultTabController.of(context).index);
-                  }
-                  return true;
-                },
-                child: !_canFetch
-                    ? Center(child: CircularProgressIndicator())
-                    : TabBarView(
-                        children: List.generate(
-                          _orderTypes.length,
-                          (index) => _buildItemListWidget(context, _orderTypes[index][0]),
-                        )
-                      ),
+                bottom: _canFetch
+                    ? AppBar(
+                        title: TabBar(
+                            tabs: List.generate(_orderTypes.length,
+                                (index) => Tab(text: _orderTypes[index][1]))))
+                    : null,
+                actions: <Widget>[
+                  IconButton(
+                    onPressed: () {
+                      _controller.pages[0].webviewController.reload();
+                      setState(() {
+                        _currentPages = {};
+                        _loading = true;
+                        _canFetch = false;
+                        _allOrders = {};
+                      });
+                    },
+                    icon: Icon(Icons.refresh),
+                  ),
+                ],
               ),
-            ),
-          );
-        },
-      )
-    );
+              body: TaobaoPage(
+                /// 抓取模块创建: 这里拿到controller
+                onCreated: (TaobaoPageController controller) {
+                  _controller = controller;
+
+                  _controller.on<EventPageLoadStop>().listen((event) {
+                    // 是否是登录页面
+                    if (H5PageUrls.isLogin(event.url)) {
+                      setState(() {
+                        _loading = false;
+                      });
+                    }
+                  });
+                },
+
+                child: NotificationListener(
+                  onNotification: (ScrollNotification note) {
+                    if (note.metrics.pixels == note.metrics.maxScrollExtent) {
+                      _fetchOrder(DefaultTabController.of(context).index);
+                    }
+                    return true;
+                  },
+                  child: !_canFetch
+                      ? Center(child: CircularProgressIndicator())
+                      : TabBarView(
+                          children: List.generate(
+                          _orderTypes.length,
+                          (index) => _buildItemListWidget(
+                              context, _orderTypes[index][0]),
+                        )),
+                ),
+              ),
+            );
+          },
+        ));
   }
 
-  StreamController<Map<String, dynamic>> _transDataController = StreamController<Map<String, dynamic>>.broadcast();
+  StreamController<Map<String, dynamic>> _transDataController =
+      StreamController<Map<String, dynamic>>.broadcast();
 
   Widget _buildItemListWidget(BuildContext context, String type) {
     var _orders = _allOrders[type] ?? [];
@@ -220,46 +226,46 @@ class _MyHomePageState extends State<MyHomePage> {
                   children: <Widget>[
                     Expanded(
                       child: Column(
-                        crossAxisAlignment:
-                            CrossAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
-                          Text("${order["seller"]["shopName"] ?? '未知'}", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                          Text("${order["seller"]["shopName"] ?? '未知'}",
+                              style: TextStyle(
+                                  fontSize: 18, fontWeight: FontWeight.bold)),
                           Text(order["id"], style: TextStyle(fontSize: 16)),
                         ],
                       ),
                     ),
                     FlatButton(
-                      color: Theme.of(context).primaryColor,
-                      textColor: Colors.white,
-                      onPressed: () {
-                        // 加载数据
-                        _loadTradeDetail("${order["id"]}");
-                        showDialog(
-                          context: context,
-                          builder: (BuildContext context) {
-                            return StatefulBuilder(
-                              builder: (context, setState) {
-                                return AlertDialog(
-                                  title: Text('物流信息'),
-                                  content: _buildTransWidget2(context),
-                                  actions: <Widget>[
-                                    FlatButton(
-                                      child: Text('关闭'),
-                                      onPressed: () {
-                                        // reset
-                                        // _transDataController.sink()
-                                        Navigator.of(context).pop();
-                                      },
-                                    ),
-                                  ],
-                                );
-                              },
-                            );
-                          },
-                        );
-                      },
-                      child: Text("查看物流")
-                    )
+                        color: Theme.of(context).primaryColor,
+                        textColor: Colors.white,
+                        onPressed: () {
+                          // 加载数据
+                          _loadTradeDetail("${order["id"]}");
+                          showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return StatefulBuilder(
+                                builder: (context, setState) {
+                                  return AlertDialog(
+                                    title: Text('物流信息'),
+                                    content: _buildTransWidget2(context),
+                                    actions: <Widget>[
+                                      FlatButton(
+                                        child: Text('关闭'),
+                                        onPressed: () {
+                                          // reset
+                                          // _transDataController.sink()
+                                          Navigator.of(context).pop();
+                                        },
+                                      ),
+                                    ],
+                                  );
+                                },
+                              );
+                            },
+                          );
+                        },
+                        child: Text("查看物流"))
                   ],
                 ),
               );
@@ -284,14 +290,16 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget _buildTransWidget2(BuildContext context) {
     return StreamBuilder(
       stream: _transDataController.stream,
-      builder: (BuildContext context, AsyncSnapshot<Map<String, dynamic>> snapshot) {
+      builder:
+          (BuildContext context, AsyncSnapshot<Map<String, dynamic>> snapshot) {
         return _buildTransWidget(context, snapshot.data);
       },
     );
   }
 
   // 物流信息
-  Widget _buildTransWidget(BuildContext context, Map<String, dynamic> _currentTransData) {
+  Widget _buildTransWidget(
+      BuildContext context, Map<String, dynamic> _currentTransData) {
     if (_currentTransData == null) {
       return Column(
         mainAxisSize: MainAxisSize.min,
@@ -306,7 +314,7 @@ class _MyHomePageState extends State<MyHomePage> {
       );
     }
 
-    if (_currentTransData["ret"][0]!="SUCCESS::调用成功") {
+    if (_currentTransData["ret"][0] != "SUCCESS::调用成功") {
       // 失败
       return Container(
         child: Text(_currentTransData["ret"][0]),
@@ -315,7 +323,7 @@ class _MyHomePageState extends State<MyHomePage> {
     }
 
     Map<String, dynamic> order = _currentTransData["data"]["orderList"][0];
-    List<dynamic> steps = order["transitList"]??[];
+    List<dynamic> steps = order["transitList"] ?? [];
 
     return SingleChildScrollView(
       child: ListBody(
@@ -323,9 +331,12 @@ class _MyHomePageState extends State<MyHomePage> {
           Column(
             mainAxisAlignment: MainAxisAlignment.start,
             children: <Widget>[
-              Text("${order["partnerName"]}: ${order["subTitle2"]}", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-              Text("${order["subtitle1"]}", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-              Text("收获地址: ${order["addr"]}", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+              Text("${order["partnerName"]}: ${order["subTitle2"]}",
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+              Text("${order["subtitle1"]}",
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+              Text("收获地址: ${order["addr"]}",
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
             ],
           ),
           Column(
@@ -340,12 +351,11 @@ class _MyHomePageState extends State<MyHomePage> {
                 alignment: Alignment.centerLeft,
                 padding: EdgeInsets.symmetric(vertical: 5, horizontal: 0),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text("${info["message"]}"),
-                    Text("${info["time"]}"),
-                  ]
-                ),
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text("${info["message"]}"),
+                      Text("${info["time"]}"),
+                    ]),
               );
             }),
           ),
@@ -362,7 +372,9 @@ class _MyHomePageState extends State<MyHomePage> {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: <Widget>[
           Center(
-            child: _busy?CircularProgressIndicator(strokeWidth: 2):Text("~加载更多~"),
+            child: _busy
+                ? CircularProgressIndicator(strokeWidth: 2)
+                : Text("~加载更多~"),
           ),
         ],
       ),

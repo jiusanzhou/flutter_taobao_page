@@ -5,7 +5,6 @@ import 'package:flutter_taobao_page/taobao/login.dart';
 import 'package:flutter_taobao_page/taobao_page.dart';
 
 class HomePage extends StatefulWidget {
-
   final String title;
 
   HomePage({Key key, this.title}) : super(key: key);
@@ -15,7 +14,6 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-
   TaobaoPageController _controller;
 
   @override
@@ -24,10 +22,10 @@ class _HomePageState extends State<HomePage> {
   }
 
   List<List<String>> _tabbar = [
-    [ "认证", "" ],
-    [ "评价", PCPageUrls.rateScore ],
-    [ "退款", PCPageUrls.dispute ],
-    [ "订单", PCPageUrls.order ],
+    ["认证", ""],
+    ["评价", PCPageUrls.rateScore],
+    ["退款", PCPageUrls.dispute],
+    ["订单", PCPageUrls.order],
   ];
 
   H5PasswordTaobaoLoginPage _loginPage = H5PasswordTaobaoLoginPage(
@@ -49,7 +47,8 @@ class _HomePageState extends State<HomePage> {
           children: <Widget>[
             Container(
               child: GestureDetector(
-                child: Text("${widget.title} ${_controller?.pageGroups?.length??0}"),
+                child: Text(
+                    "${widget.title} ${_controller?.pageGroups?.length ?? 0}"),
                 onDoubleTap: () {
                   _controller.setDebug(!_controller.isDebug);
                 },
@@ -65,7 +64,9 @@ class _HomePageState extends State<HomePage> {
                     _controller.showPageWithUrl(_tabbar[idx][1]);
                   },
                   tabs: List.generate(_tabbar.length, (i) {
-                    return Tab(child: Text(_tabbar[i][0], style: TextStyle(fontSize: 11)));
+                    return Tab(
+                        child: Text(_tabbar[i][0],
+                            style: TextStyle(fontSize: 11)));
                   }),
                 ),
               ),
@@ -83,11 +84,11 @@ class _HomePageState extends State<HomePage> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          _loginPage.isLogin?_startProcess():_loginPage.open(context);
+          _loginPage.isLogin ? _startProcess() : _loginPage.open(context);
 
           // Navigator.push(context, MaterialPageRoute(builder: (context) => DebugWebview()));
-
-        }, child: Icon(Icons.add),
+        },
+        child: Icon(Icons.add),
       ),
     );
   }
@@ -103,7 +104,7 @@ class _HomePageState extends State<HomePage> {
     // }).catchError((e) {
     //   print("[error] vipScore => $e");
     // });
-    
+
     // _controller.showPageWithUrl(PCPageUrls.certityInfo);
     // _controller.showPageWithUrl(PCPageUrls.dispute);
 
@@ -172,7 +173,9 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<dynamic> openPage(String url, String title, ActionJob act) {
-    return _controller.openPage(url, options: PageOptions(visible: false, title: title)).then((page) {
+    return _controller
+        .openPage(url, options: PageOptions(visible: false, title: title))
+        .then((page) {
       return page.doAction(act);
     });
   }

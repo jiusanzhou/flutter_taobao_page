@@ -8,7 +8,6 @@ class DebugWebview extends StatefulWidget {
 }
 
 class _DebugWebviewState extends State<DebugWebview> {
-
   InAppWebViewController _controller;
 
   @override

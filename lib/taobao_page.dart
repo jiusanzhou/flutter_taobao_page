@@ -127,9 +127,8 @@ class HttpClient extends http.BaseClient {
   }
 
   Future<http.StreamedResponse> send(http.BaseRequest request) async {
-    request.headers['cookie'] = await CookieManager.instance()
-        .getCookies(url: request.url)
-        .then((ck) {
+    request.headers['cookie'] =
+        await CookieManager.instance().getCookies(url: request.url).then((ck) {
       return ck.map((e) => "${e.name}=${e.value}").join(";");
     });
     if (request.headers['user-agent'] != null)
@@ -157,7 +156,8 @@ class HttpClient extends http.BaseClient {
         break;
       case 'post':
       case 'POST':
-        return this.post(Uri.parse(url), headers: headers, body: body, encoding: encoding);
+        return this.post(Uri.parse(url),
+            headers: headers, body: body, encoding: encoding);
       default:
         return this.noSuchMethod(null);
     }
@@ -478,7 +478,6 @@ class TaobaoPageController {
                     useMobile: true,
                     // onWebViewCreated: (c) => cc = c,
                     onLoadStart: (c, url) {
-
                       print("验证码 webview 开始加载 $url");
 
                       // 怎么判断是否已经恢复了而没有验证码
@@ -487,7 +486,7 @@ class TaobaoPageController {
                       //   return Navigator.pop(context);
                       // }
                       // 其他的呢
-                      
+
                       if (!_autoReload) {
                         _autoReload = true;
                         return;

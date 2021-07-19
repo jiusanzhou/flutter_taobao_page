@@ -26,7 +26,8 @@ class ActionJob {
   // bind page for this action
   // Page page; , @required this.page
 
-  ActionJob(this.url, {
+  ActionJob(
+    this.url, {
     this.code,
     this.noLogin: false,
     this.isAsync: true,
@@ -37,7 +38,6 @@ class ActionJob {
 }
 
 class PageOptions {
-
   bool keepalive;
 
   bool visible;
@@ -65,25 +65,23 @@ class PageOptions {
   bool isRegex;
   bool gbk;
 
-  PageOptions({
-    this.keepalive: false,
-    this.visible: false,
-    this.title,
-    this.max: 1,
-    this.timeout,
-    this.refresh: false,
-    this.blockers: const [],
-    this.useMobile: false, // we need to set for webviewpage
-    this.method: "GET",
-    this.headers,
-    this.pattern,
-    this.gbk: false,
-    this.isRegex: false
-  });
+  PageOptions(
+      {this.keepalive: false,
+      this.visible: false,
+      this.title,
+      this.max: 1,
+      this.timeout,
+      this.refresh: false,
+      this.blockers: const [],
+      this.useMobile: false, // we need to set for webviewpage
+      this.method: "GET",
+      this.headers,
+      this.pattern,
+      this.gbk: false,
+      this.isRegex: false});
 }
 
 class WebviewPage {
-
   // TODO: auto load scripts
 
   int id;
@@ -99,7 +97,7 @@ class WebviewPage {
 
   final Queue<ActionJob> _actionsQueue = Queue<ActionJob>();
   bool _queuePaused = true;
-  
+
   final Map<String, Completer> _waitCompleters = {};
 
   Duration _actInterval = const Duration(microseconds: 100);
@@ -135,15 +133,13 @@ class WebviewPage {
 
   WebviewPage(
     this.id,
-    this._url,
-    {
-      this.onWebViewCreated,
-      this.onLoadStart,
-      this.onLoadStop,
-      this.onLoadError,
-      this.options,
-    }
-  ) {
+    this._url, {
+    this.onWebViewCreated,
+    this.onLoadStart,
+    this.onLoadStop,
+    this.onLoadError,
+    this.options,
+  }) {
     init();
   }
 
@@ -163,20 +159,21 @@ class WebviewPage {
     );
 
     // set a timeout
-    if (options.timeout != null) Timer(options.timeout, () {
-      if (webviewController==null) {
-        print("[action page] create webveiw timeout => $_url");
-        return;
-      }
-      // timeout, stop laoding
-      webviewController.isLoading().then((value) {
-        print("[action page] laod timeout ${options.timeout} => $_url");
-        if (value) {
-          // call directlly
-          _onLoadStop(webviewController, _url);
+    if (options.timeout != null)
+      Timer(options.timeout, () {
+        if (webviewController == null) {
+          print("[action page] create webveiw timeout => $_url");
+          return;
         }
+        // timeout, stop laoding
+        webviewController.isLoading().then((value) {
+          print("[action page] laod timeout ${options.timeout} => $_url");
+          if (value) {
+            // call directlly
+            _onLoadStop(webviewController, _url);
+          }
+        });
       });
-    });
 
     // start a routine to execute
     _actTimer = Timer.periodic(_actInterval, (timer) {
@@ -187,7 +184,7 @@ class WebviewPage {
   // manual destroy this page
   Future<bool> destroy() {
     _actTimer.cancel();
-    
+
     // clean others
 
     return Future.value(true);
@@ -199,8 +196,8 @@ class WebviewPage {
   }
 
   // run action
-  Future<dynamic> doAction(ActionJob action, {Duration timeout: const Duration(seconds: 60)}) {
-
+  Future<dynamic> doAction(ActionJob action,
+      {Duration timeout: const Duration(seconds: 60)}) {
     // if with code to execute just return
     if (action.code == null) return Future.value(null);
 
@@ -208,7 +205,7 @@ class WebviewPage {
     String vid = "callback_${Helper.randomString()}";
 
     action.vid = vid;
-  
+
     // new a future
     _waitCompleters[vid] = Completer();
 
@@ -237,7 +234,8 @@ class WebviewPage {
     if (args.length != 3) return "";
 
     Completer c = _waitCompleters.remove(args[0]);
-    if ( c == null ) return Future.error("[action page] unregister action id: ${args[0]}");
+    if (c == null)
+      return Future.error("[action page] unregister action id: ${args[0]}");
     // error should return current page.
     args[2] == null ? c.complete(args[1]) : c.completeError(args[2]);
     return "";
@@ -253,7 +251,7 @@ class WebviewPage {
 
   // all result need to use channel
   void _runJS(String vid, String code, {bool isAsync: true}) {
-    // 
+    //
     // check if type is promise: typeof subject.then == 'function'
     //
     // let callback = (data) => flutter_inappwebview.callHandler('js_result', vid, data);
@@ -267,10 +265,11 @@ class WebviewPage {
     // but the inappwebview has inject polyfill for promise
     // NOTE: try not to use arrow function and `let`.
 
-
     // if not isAsync we just eval the code and return
     if (!isAsync) {
-      webviewController.evaluateJavascript(source: "(function(){ $code })()").then((value) {
+      webviewController
+          .evaluateJavascript(source: "(function(){ $code })()")
+          .then((value) {
         _onJsResultHandler([vid, value, null]);
       }).catchError((e) {
         _onJsResultHandler([vid, null, e]);
@@ -283,7 +282,7 @@ class WebviewPage {
   var callback = function(data, err) { return ${_fncallback(vid)} };
   try {
     var res = (function() {
-      ${code.indexOf("return")<0?"return "+code:code}
+      ${code.indexOf("return") < 0 ? "return " + code : code}
     })();
     if (typeof res.then !== 'function') {
       callback(res);
@@ -327,7 +326,8 @@ class WebviewPage {
     _queuePaused = true;
 
     webviewController = controller;
-    webviewController.addJavaScriptHandler(handlerName: "js_result", callback: _onJsResultHandler);
+    webviewController.addJavaScriptHandler(
+        handlerName: "js_result", callback: _onJsResultHandler);
     onWebViewCreated?.call(webviewController);
   }
 
@@ -345,7 +345,7 @@ class WebviewPage {
   }
 
   _onLoadStop(InAppWebViewController controller, String url) {
-    // NOTE: make sure run once 
+    // NOTE: make sure run once
     if (_stopped) return;
 
     _stopped = true;
@@ -358,7 +358,8 @@ class WebviewPage {
     onLoadStop?.call(controller, url);
   }
 
-  _onLoadError(InAppWebViewController controller, String url, int code, String message) {
+  _onLoadError(
+      InAppWebViewController controller, String url, int code, String message) {
     print("[action page] load page error => $url, $message");
     onLoadError?.call(controller, url, code, message);
   }

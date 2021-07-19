@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_taobao_page/action_page.dart';
 
 class TaobaoPageView extends StatefulWidget {
-
   final int stackIndex; // 当前显示栈 index
-  // final List<Page> children; // 
+  // final List<Page> children; //
   final bool scrollable;
   final Widget title;
   final TabController tabController;
@@ -25,7 +24,6 @@ class TaobaoPageView extends StatefulWidget {
 }
 
 class _TaobaoPageViewState extends State<TaobaoPageView> {
-
   @override
   void initState() {
     super.initState();
@@ -36,15 +34,18 @@ class _TaobaoPageViewState extends State<TaobaoPageView> {
     // build tabs with page groups, if only one maybe we just render with stack?
     // final _grps = _buildPageGroups(context);
 
-    // if (_grps.length==0) return Container(child: Text("no pages")); 
+    // if (_grps.length==0) return Container(child: Text("no pages"));
     // if (_grps.length==1) return _buildStack(context, _grps[0]);
 
     final _grps = widget.groupedPages;
 
     return TabBarView(
       controller: widget.tabController,
-      physics: widget.scrollable?const AlwaysScrollableScrollPhysics():const NeverScrollableScrollPhysics(),
-      children: List.generate(_grps.length, (index) => _buildStack(context, _grps[index])),
+      physics: widget.scrollable
+          ? const AlwaysScrollableScrollPhysics()
+          : const NeverScrollableScrollPhysics(),
+      children: List.generate(
+          _grps.length, (index) => _buildStack(context, _grps[index])),
     );
 
     // build tabs

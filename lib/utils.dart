@@ -70,11 +70,11 @@ class EventBus {
 }
 
 class Helper {
-    static final Random _random = Random.secure();
+  static final Random _random = Random.secure();
 
-    static String randomString([int length = 12]) {
-      var codeUnits = new List.generate(length, (index) => _random.nextInt(23)+65);
-      return String.fromCharCodes(codeUnits);
-    }
+  static String randomString([int length = 12]) {
+    var codeUnits =
+        new List.generate(length, (index) => _random.nextInt(23) + 65);
+    return String.fromCharCodes(codeUnits);
+  }
 }
-

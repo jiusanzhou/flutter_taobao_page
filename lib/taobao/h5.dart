@@ -62,14 +62,12 @@ class H5API {
         context, ActionJob(H5PageUrls.home, code: H5APICode.disputeList()));
   }
 
-
   Future<dynamic> punishList(
     BuildContext context,
   ) {
-    return controller.doAction(context,
-        ActionJob(H5PageUrls.home, code: H5APICode.punishList()));
+    return controller.doAction(
+        context, ActionJob(H5PageUrls.home, code: H5APICode.punishList()));
   }
-
 }
 
 class H5APICode {

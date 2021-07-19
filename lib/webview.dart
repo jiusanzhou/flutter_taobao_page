@@ -4,10 +4,13 @@ import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 typedef void CreatedCallback(InAppWebViewController controller);
 typedef void LoadStartCallback(InAppWebViewController controller, String url);
 typedef void LoadStopCallback(InAppWebViewController controller, String url);
-typedef void LoadErrorCallback(InAppWebViewController controller, String url, int code, String message);
+typedef void LoadErrorCallback(
+    InAppWebViewController controller, String url, int code, String message);
 
-const UA_PC = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.135 Safari/537.36";
-const UA_IOS = "Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1";
+const UA_PC =
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.135 Safari/537.36";
+const UA_IOS =
+    "Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1";
 
 class TaobaoWebview extends StatefulWidget {
   ///Event fired when the [InAppWebView] is created.
@@ -24,7 +27,8 @@ class TaobaoWebview extends StatefulWidget {
   final void Function(InAppWebViewController controller, String url, int code,
       String message) onLoadError;
 
-  final void Function(InAppWebViewController controller, int progress) onProgressChanged;
+  final void Function(InAppWebViewController controller, int progress)
+      onProgressChanged;
 
   final String initialUrl;
 
@@ -37,16 +41,12 @@ class TaobaoWebview extends StatefulWidget {
   TaobaoWebview({
     this.initialUrl: "about:blank",
     this.useMobile: false,
-
     this.onWebViewCreated,
     this.onLoadStart,
     this.onLoadStop,
     this.onLoadError,
-
     this.onProgressChanged,
-
     this.quickOnFinish: true,
-
     this.blockers: const [],
   });
 
@@ -54,33 +54,34 @@ class TaobaoWebview extends StatefulWidget {
   _TaobaoWebviewState createState() => _TaobaoWebviewState();
 }
 
-class _TaobaoWebviewState extends State<TaobaoWebview> with AutomaticKeepAliveClientMixin<TaobaoWebview> {
-
+class _TaobaoWebviewState extends State<TaobaoWebview>
+    with AutomaticKeepAliveClientMixin<TaobaoWebview> {
   @override
   bool get wantKeepAlive => true;
 
   void _onWebViewCreated(InAppWebViewController controller) {
-
-    // 
-    if (widget.onWebViewCreated!=null) widget.onWebViewCreated(controller);
+    //
+    if (widget.onWebViewCreated != null) widget.onWebViewCreated(controller);
   }
 
   void _onLoadStart(InAppWebViewController controller, Uri url) {
     tmpurl = url;
 
-    if (widget.onLoadStart!=null) widget.onLoadStart(controller, url.toString());
+    if (widget.onLoadStart != null)
+      widget.onLoadStart(controller, url.toString());
   }
 
   void _onLoadStop(InAppWebViewController controller, Uri url) {
-
-    // 
-    if (widget.onLoadStop!=null) widget.onLoadStop(controller, url.toString());
+    //
+    if (widget.onLoadStop != null)
+      widget.onLoadStop(controller, url.toString());
   }
 
   Uri tmpurl;
   int tmpval;
   void _onProcessChanged(InAppWebViewController controller, int v) {
-    if (widget.onProgressChanged!=null) widget.onProgressChanged(controller, v);
+    if (widget.onProgressChanged != null)
+      widget.onProgressChanged(controller, v);
 
     // 不是快速就不处理
     if (!widget.quickOnFinish) return;
@@ -94,10 +95,11 @@ class _TaobaoWebviewState extends State<TaobaoWebview> with AutomaticKeepAliveCl
     tmpval = v;
   }
 
-  void _onLoadError(InAppWebViewController controller, Uri url, int code, String message) {
-
-    // 
-    if (widget.onLoadError!=null) widget.onLoadError(controller, url.toString(), code, message);
+  void _onLoadError(
+      InAppWebViewController controller, Uri url, int code, String message) {
+    //
+    if (widget.onLoadError != null)
+      widget.onLoadError(controller, url.toString(), code, message);
   }
 
   @override
@@ -108,7 +110,9 @@ class _TaobaoWebviewState extends State<TaobaoWebview> with AutomaticKeepAliveCl
         crossPlatform: InAppWebViewOptions(
           javaScriptEnabled: true,
           contentBlockers: widget.blockers,
-          preferredContentMode: widget.useMobile ? UserPreferredContentMode.MOBILE:UserPreferredContentMode.DESKTOP,
+          preferredContentMode: widget.useMobile
+              ? UserPreferredContentMode.MOBILE
+              : UserPreferredContentMode.DESKTOP,
           // userAgent: widget.useMobile ? UA_IOS : UA_PC// we need to set correct ua for page to load
         ),
         android: AndroidInAppWebViewOptions(
@@ -120,7 +124,7 @@ class _TaobaoWebviewState extends State<TaobaoWebview> with AutomaticKeepAliveCl
       ),
       onWebViewCreated: _onWebViewCreated,
       onLoadStart: _onLoadStart,
-      onLoadStop: widget.quickOnFinish?null:_onLoadStop, // 快速不绑定真实的 onStop
+      onLoadStop: widget.quickOnFinish ? null : _onLoadStop, // 快速不绑定真实的 onStop
       onLoadError: _onLoadError,
       onProgressChanged: _onProcessChanged,
     );

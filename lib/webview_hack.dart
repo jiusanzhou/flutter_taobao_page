@@ -1,5 +1,3 @@
-
-
 import 'dart:convert';
 import 'dart:io';
 
@@ -11,21 +9,20 @@ import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 // create a proxy input field with `getBoundingClientRect()`
 
 class WebviewHack extends StatefulWidget {
-
   final Widget child;
-  final Widget Function(BuildContext context, WebviewHackController controller) builder;
+  final Widget Function(BuildContext context, WebviewHackController controller)
+      builder;
 
   WebviewHack({
     this.child,
     this.builder,
-  }) : assert(child!=null || builder != null);
+  }) : assert(child != null || builder != null);
 
   @override
   _WebviewHackState createState() => _WebviewHackState();
 }
 
 class _WebviewHackState extends State<WebviewHack> {
-
   WebviewHackController _controller;
 
   bool _display = false;
@@ -35,7 +32,7 @@ class _WebviewHackState extends State<WebviewHack> {
   double _sizeHeight = 1;
   double _sizeWidth = 61;
 
-  bool _obscureText  = false;
+  bool _obscureText = false;
 
   TextStyle _textStyle;
 
@@ -54,25 +51,26 @@ class _WebviewHackState extends State<WebviewHack> {
     setState(() {
       _obscureText = data["type"] == "password";
 
-      _textStyle = st.copyWith(fontSize: st.fontSize - 0 );
+      _textStyle = st.copyWith(fontSize: st.fontSize - 0);
     });
   }
 
   _updateValue(String value) {
     setState(() {
       _inputController.text = value;
-      _inputController.selection = TextSelection.fromPosition(TextPosition(offset: value.length));
-      
+      _inputController.selection =
+          TextSelection.fromPosition(TextPosition(offset: value.length));
+
       // _inputController.selection = _inputController.selection.copyWith(baseOffset: value.length);
     });
   }
 
-  _updatePosAndSize(double x, double y, { double width, double height }) {
+  _updatePosAndSize(double x, double y, {double width, double height}) {
     setState(() {
       _posTop = y; //.toDouble();
       _posLeft = x; //.toDouble();
-      if (width!=null) _sizeWidth = width; //.toDouble();
-      if (height!=null) _sizeHeight = height; //.toDouble();
+      if (width != null) _sizeWidth = width; //.toDouble();
+      if (height != null) _sizeHeight = height; //.toDouble();
     });
   }
 
@@ -137,47 +135,50 @@ class _WebviewHackState extends State<WebviewHack> {
       children: <Widget>[
         widget.child ?? widget.builder(context, _controller),
         Positioned(
-          top: _posTop,
-          left: _posLeft,
-          height: _sizeHeight,
-          width: _sizeWidth == null ? null : _sizeWidth - 60, // TODO: FIXME hardcode
-          child: Container(
-            color: Colors.blueAccent[300],
-            padding: EdgeInsets.symmetric(horizontal: 5), // TODO: FIXME hardcode
-            child: TextField(
-              cursorColor: Colors.black,
-              cursorWidth: 1,
-              autofocus: false, /// don't works well
-              style: _textStyle,
-              controller: _inputController,
-              obscureText: _obscureText,
-              focusNode: _inputFocus,
-              decoration: InputDecoration(border: InputBorder.none),
-              onChanged: (v) {
-                // set value to element
-                _controller.setValueToInput(v);
-              },
-            )
-          )
-        ),
+            top: _posTop,
+            left: _posLeft,
+            height: _sizeHeight,
+            width: _sizeWidth == null
+                ? null
+                : _sizeWidth - 60, // TODO: FIXME hardcode
+            child: Container(
+                color: Colors.blueAccent[300],
+                padding:
+                    EdgeInsets.symmetric(horizontal: 5), // TODO: FIXME hardcode
+                child: TextField(
+                  cursorColor: Colors.black,
+                  cursorWidth: 1,
+                  autofocus: false,
+
+                  /// don't works well
+                  style: _textStyle,
+                  controller: _inputController,
+                  obscureText: _obscureText,
+                  focusNode: _inputFocus,
+                  decoration: InputDecoration(border: InputBorder.none),
+                  onChanged: (v) {
+                    // set value to element
+                    _controller.setValueToInput(v);
+                  },
+                ))),
 
         // 加载浮层，防止未加载完成就被点击出现非预期的结果.
-        _loading?Container(
-          width: double.infinity,
-          height: double.infinity,
-          decoration: BoxDecoration(),
-          child: Center(
-            child: CircularProgressIndicator(),
-          ),
-        ):Container(),
+        _loading
+            ? Container(
+                width: double.infinity,
+                height: double.infinity,
+                decoration: BoxDecoration(),
+                child: Center(
+                  child: CircularProgressIndicator(),
+                ),
+              )
+            : Container(),
       ],
     );
-
   }
 }
 
 class WebviewHackController {
-
   _WebviewHackState _state;
 
   WebviewHackController(this._state);
@@ -189,19 +190,20 @@ class WebviewHackController {
   void onWebViewCreated(InAppWebViewController controller) {
     _webcontroller = controller;
     print("webview hacker, webviwe created");
-    controller.addJavaScriptHandler(handlerName: "input_fouce", callback: _onInputFouce);
+    controller.addJavaScriptHandler(
+        handlerName: "input_fouce", callback: _onInputFouce);
     controller.addJavaScriptHandler(handlerName: "scroll", callback: _onScroll);
     controller.addJavaScriptHandler(handlerName: "echo", callback: _onEcho);
-    controller.addJavaScriptHandler(handlerName: "mock_page_finish", callback: _onMockPageFinish);
+    controller.addJavaScriptHandler(
+        handlerName: "mock_page_finish", callback: _onMockPageFinish);
   }
 
-
   String _installcallback() {
-
     String code;
 
     if (Platform.isAndroid) {
-      code = "flutter_inappwebview._callHandler(args[0], setTimeout(function(){}), JSON.stringify(args.slice(1).map(function(e){return JSON.stringify(e)})))";
+      code =
+          "flutter_inappwebview._callHandler(args[0], setTimeout(function(){}), JSON.stringify(args.slice(1).map(function(e){return JSON.stringify(e)})))";
     } else {
       code = "flutter_inappwebview.callHandler(arguments)";
     }
@@ -362,18 +364,26 @@ class WebviewHackController {
     // must install, js can call  _callhackerback(...args);
 
     // 安装回调工具函数
-    controller.evaluateJavascript(source: _installcallback()).then((value) => print("安装回调工具函数 执行成功 => $value"));
+    controller
+        .evaluateJavascript(source: _installcallback())
+        .then((value) => print("安装回调工具函数 执行成功 => $value"));
 
     // 安装滚动事件触发监听
-    controller.evaluateJavascript(source: _onscrolljs).then((value) => print("安装滚动事件触发监听 执行成功 => $value"));
+    controller
+        .evaluateJavascript(source: _onscrolljs)
+        .then((value) => print("安装滚动事件触发监听 执行成功 => $value"));
 
     // 安装点击/fouce处理函数
-    controller.evaluateJavascript(source: _onprocesshandlejs).then((value) => print("安装点击/fouce处理函数 执行成功 => $value"));
+    controller
+        .evaluateJavascript(source: _onprocesshandlejs)
+        .then((value) => print("安装点击/fouce处理函数 执行成功 => $value"));
 
     // 安装点击/fouce监听
     // 在start中可以监听document来处理
     // 难道是这里导致老是加载卡住10%？ => 里面有定时器
-    controller.evaluateJavascript(source: _onclickdocumentjs).then((value) => print("安装点击/fouce监听 执行成功 => $value"));
+    controller
+        .evaluateJavascript(source: _onclickdocumentjs)
+        .then((value) => print("安装点击/fouce监听 执行成功 => $value"));
 
     // 安装模拟加载完成触发
     // controller.evaluateJavascript(source: _onprefinishjs).then((value) => print("安装模拟加载完成触发 执行成功 => $value"));
@@ -383,17 +393,25 @@ class WebviewHackController {
     print("webview hacker, webviwe finish url: $url");
 
     // 安装回调工具函数
-    controller.evaluateJavascript(source: _installcallback()).then((value) => print("安装回调工具函数 执行成功 => $value"));
+    controller
+        .evaluateJavascript(source: _installcallback())
+        .then((value) => print("安装回调工具函数 执行成功 => $value"));
 
     // 安装滚动事件触发监听
-    controller.evaluateJavascript(source: _onscrolljs).then((value) => print("安装滚动事件触发监听 执行成功 => $value"));
+    controller
+        .evaluateJavascript(source: _onscrolljs)
+        .then((value) => print("安装滚动事件触发监听 执行成功 => $value"));
 
     // 安装点击/fouce处理函数
-    controller.evaluateJavascript(source: _onprocesshandlejs).then((value) => print("安装点击/fouce处理函数 执行成功 => $value"));
+    controller
+        .evaluateJavascript(source: _onprocesshandlejs)
+        .then((value) => print("安装点击/fouce处理函数 执行成功 => $value"));
 
     // 安装点击/fouce监听
     // 查找到所有的input表单进行处理
-    controller.evaluateJavascript(source: _onclickinputjs).then((value) => print("安装点击/fouce监听 执行成功 => $value"));
+    controller
+        .evaluateJavascript(source: _onclickinputjs)
+        .then((value) => print("安装点击/fouce监听 执行成功 => $value"));
 
     // 去除遮罩层
     _state._onLoadFinish();
@@ -410,7 +428,8 @@ class WebviewHackController {
     print("==== 点击了 input ===> ${args[1]}");
     var data = json.decode(args[1]);
     _orginalRect = Rect.fromJson(data["rect"]);
-    _state._updatePosAndSize(_orginalRect.left, _orginalRect.top, width: _orginalRect.width, height: _orginalRect.height);
+    _state._updatePosAndSize(_orginalRect.left, _orginalRect.top,
+        width: _orginalRect.width, height: _orginalRect.height);
 
     _state._updateStyle(getTextStyleFromJson(data["style"]), data);
 
@@ -445,15 +464,19 @@ class WebviewHackController {
     var code = """
     __inputelement.value = "$v"; '____setvaluetoinput'
     """;
-    _webcontroller.evaluateJavascript(source: code).then((value) => print("执行成功 => $value"));
+    _webcontroller
+        .evaluateJavascript(source: code)
+        .then((value) => print("执行成功 => $value"));
   }
 
   hiddenInput(bool v) {
     var code = """
-    __inputelement.style.color = "${v?"transparent":"#000"}";
+    __inputelement.style.color = "${v ? "transparent" : "#000"}";
     """;
 
-    _webcontroller.evaluateJavascript(source: code).then((value) => print("执行成功 => $value"));
+    _webcontroller
+        .evaluateJavascript(source: code)
+        .then((value) => print("执行成功 => $value"));
   }
 }
 

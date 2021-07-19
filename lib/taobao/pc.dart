@@ -32,17 +32,20 @@ class PCWeb {
   }
 
   Future<dynamic> isSeller(BuildContext context) {
-    return controller.doAction(
-      context,
-      ActionJob(
-        PCPageUrls.sellerAjax + "?" + "callback=seller_layout_head&action=FrameworkLayoutAction&event_submit_do_layout_data=true",
-        headless: true,
-      ),
-      options: PageOptions(
-        pattern: "(\{.+\})",
-        isRegex: true,
-      )
-    ).then((v) => json.decode(v));
+    return controller
+        .doAction(
+            context,
+            ActionJob(
+              PCPageUrls.sellerAjax +
+                  "?" +
+                  "callback=seller_layout_head&action=FrameworkLayoutAction&event_submit_do_layout_data=true",
+              headless: true,
+            ),
+            options: PageOptions(
+              pattern: "(\{.+\})",
+              isRegex: true,
+            ))
+        .then((v) => json.decode(v));
   }
 
   Future<dynamic> accountProfile2(BuildContext context) {
@@ -280,7 +283,8 @@ class PCWeb {
         if (url.indexOf("_____tmd_____/verify") > 0) {
           print("[page taobao order] verify code, need to reload");
           // just reload
-          controller.loadUrl(urlRequest: URLRequest(url: Uri.parse(PCPageUrls.order)));
+          controller.loadUrl(
+              urlRequest: URLRequest(url: Uri.parse(PCPageUrls.order)));
 
           // call verify back
           onVerifyConfirm?.call();

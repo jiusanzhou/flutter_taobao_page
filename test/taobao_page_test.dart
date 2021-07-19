@@ -1,4 +1,3 @@
-
 import 'dart:io';
 
 import 'package:flutter_taobao_page/taobao/pc.dart';
@@ -11,7 +10,8 @@ void main() {
     var data = Parser({
       "realname": "#ah\\:addressForm > li:nth-child(1) > strong@text",
       "email": "#ah\\:addressForm > li:nth-child(2) > strong@text",
-      "gender": "#ah\\:addressForm > li:nth-child(3) > input[type='hidden']@value",
+      "gender":
+          "#ah\\:addressForm > li:nth-child(3) > input[type='hidden']@value",
       "birth": [
         "#ah\\:addressForm > li:nth-child(4) > input:nth-child(2)@value",
         "#ah\\:addressForm > li:nth-child(4) > input:nth-child(3)@value",
@@ -65,7 +65,7 @@ void main() {
     var data = Parser("var disputeData =(.+);", isRegex: true).parse(content);
     print(data);
   });
-  
+
   test('is verify html', () {
     var content = File('data/verify.htm').readAsStringSync();
     var data = PCWeb.isVerify(content);
