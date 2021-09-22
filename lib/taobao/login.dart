@@ -227,12 +227,19 @@ class H5PasswordTaobaoLoginPage extends TaobaoLoginPage {
                       '___短信模式插入'
                     """
                           : """
-                      let i;
-                      i = document.querySelector('#fm-login-id'); i.value="${info.login}";
-                      i = document.querySelector('#fm-login-password'); i.value="${info.password}";
-                      setTimeout(function() {
-                        document.querySelector("#login-form > div.fm-btn > button").click(); // 点击登录按钮
-                      }, 500)
+                      let _normtimer = setInterval(function() {
+                        let i;
+                        i = document.querySelector('#fm-login-id');
+                        if (!i) return; // 未渲染完成
+                        i.value="${info.login}";
+                        i = document.querySelector('#fm-login-password');
+                        if (!i) return; // 未渲染完成
+                        i.value="${info.password}";
+                        clearInterval(_normtimer); // 清楚定时器
+                        setTimeout(function() {
+                          document.querySelector("#login-form > div.fm-btn > button").click(); // 点击登录按钮
+                        }, 500)
+                      }, 100);
                       '___普通模式插入'
                     """;
 
