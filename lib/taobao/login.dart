@@ -145,14 +145,25 @@ class H5PasswordTaobaoLoginPage extends TaobaoLoginPage {
                     AccountInfo info =
                         config != null ? AccountInfo.fromJson(config) : null;
 
-                    // 如果是短信模式，切换至
-                    if (smsMode || (info != null && info.smsMode)) {
+                    // 淘宝默认改成短信登录，手动切换至密码登录
+                    if (!smsMode && (info == null || !info.smsMode)) {
+                      print("not sms mode need to change to password mode");
+                      // password-login-link
                       Future.delayed(Duration(milliseconds: 50), () {
                         controller.evaluateJavascript(source: """
-                      let i = document.querySelector('.sms-login-link'); i && i.click();''
+                      let i = document.querySelector('.password-login-link'); i && i.click();''
                       """);
                       });
                     }
+
+                    // 如果是短信模式，切换至
+                    // if (smsMode || (info != null && info.smsMode)) {
+                    //   Future.delayed(Duration(milliseconds: 50), () {
+                    //     controller.evaluateJavascript(source: """
+                    //   let i = document.querySelector('.sms-login-link'); i && i.click();''
+                    //   """);
+                    //   });
+                    // }
 
                     // 在这里去绑定时间，点击登录按钮后把表单内内容拿到
                     controller.evaluateJavascript(source: """
